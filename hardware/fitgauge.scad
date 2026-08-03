@@ -202,40 +202,62 @@ assert(post_h > m2_engage, "post shorter than the thread engagement it tests");
 
 // --- v2: the fastener test on its own ---------------------------------------
 
-s_l = 60; s_w = 42; s_t = 3.00;
-bar_y = -12; bar_w = 12; bar_h = 8;   // solid block: the pod's end wall
+s_l = 66; s_w = 58; s_t = 3.00;
+post_row = 19;                        // filleted posts: the MCU lid's joint
+bar_y = 2; bar_w = 12; bar_h = 8;     // solid block: the pod's end wall
+plug_y = -16; plug_pitch = 16;
+plug_offsets = [0, 0.50, 1.00, 1.50]; // added per side to the header's outline
 
 module screwgauge() {
     difference() {
         union() {
             rbox(s_l, s_w, s_t, g_r);
-            // filleted posts - the MCU lid's joint
             for (i = [0 : len(pilots)-1])
                 translate([-(len(pilots)-1)*post_pitch/2 + i*post_pitch,
-                           9, s_t]) {
+                           post_row, s_t]) {
                     cylinder(h = post_h, d = enc_post_od);
                     root_fillet(enc_post_od, enc_fillet);
                 }
-            // solid bar - the pod's end wall
-            translate([-25, bar_y - bar_w/2, s_t])
-                cube([50, bar_w, bar_h]);
-            // one label row, between them, serving both columns
+            translate([-25, bar_y - bar_w/2, s_t]) cube([50, bar_w, bar_h]);
+            // one pilot label row, serving both the posts and the block
             for (i = [0 : len(pilots)-1])
                 label(str(pilots[i]*100),
-                      -(len(pilots)-1)*post_pitch/2 + i*post_pitch, 1);
+                      -(len(pilots)-1)*post_pitch/2 + i*post_pitch, 11);
+            for (i = [0 : len(plug_offsets)-1])
+                label(str(plug_offsets[i]*100),
+                      -(len(plug_offsets)-1)*plug_pitch/2 + i*plug_pitch, -25);
         }
         for (i = [0 : len(pilots)-1]) {
             x = -(len(pilots)-1)*post_pitch/2 + i*post_pitch;
-            translate([x, 9, s_t + post_h - m2_engage])
+            translate([x, post_row, s_t + post_h - m2_engage])
                 cylinder(h = m2_engage + 0.1, d = pilots[i]);
             translate([x, bar_y, s_t + bar_h - m2_engage])
                 cylinder(h = m2_engage + 0.1, d = pilots[i]);
+        }
+        // Plug outline. connector.scad assumes the mated PLUG has the same
+        // footprint as the header it pushes onto - nobody has ever measured it,
+        // and the pod's pocket is built on that assumption. Push the plug
+        // through: the smallest slot it passes gives the real outline, and the
+        // difference from the modelled 12.52 x 5.75 is the pod_gap the pocket
+        // actually needs.
+        for (i = [0 : len(plug_offsets)-1]) {
+            o = plug_offsets[i];
+            translate([-(len(plug_offsets)-1)*plug_pitch/2 + i*plug_pitch,
+                       plug_y, -1])
+                linear_extrude(s_t + 2)
+                    square([xh_body_len + 2*o,
+                            xh_body_front + xh_body_back + 2*o], center = true);
         }
     }
 }
 
 assert(bar_h >= m2_engage, "solid bar shallower than the engagement it tests");
-assert(bar_y - bar_w/2 > -s_w/2, "solid bar runs off the plate");
+assert(bar_y + bar_w/2 < post_row - enc_post_od/2 - enc_fillet,
+       "solid block runs into the posts");
+assert(plug_y - (xh_body_front + xh_body_back)/2 - max(plug_offsets) > -s_w/2,
+       "plug slots run off the plate");
+assert(plug_pitch > xh_body_len + 2*max(plug_offsets),
+       "plug slots overlap each other");
 
 if      (part == "full")   fitgauge();
 else if (part == "screws") screwgauge();

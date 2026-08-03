@@ -457,10 +457,16 @@ weakest direction. Two consequences:
   failure that occurred. On the lid posts the flare is 6.6 across, well over
   the 4.58 the tight corner allows, so an assert holds it high above the board.
 - **`make fitgauge` now also builds `fitgauge_screws.stl`** - `part="screws"`,
-  a 60 x 42 plate, ~10 min. Two rows at the same five pilots: filleted 4.20
-  posts (the MCU lid's joint) and the same pilots blind-drilled into a solid
-  8 mm block (the pod's end walls). One variable per row instead of one row
-  confounding both. Print that before anything else.
+  a 66 x 58 plate. Three rows:
+
+  | row | what it settles |
+  | --- | --- |
+  | 5 filleted 4.20 posts | the MCU lid's joint, with the fix applied |
+  | the same 5 pilots in a solid 8 mm block | the pod's end walls - no column to shear, no thin wall to split. A different joint that the first gauge never tested separately |
+  | 4 plug slots, +0 to +1.50 | **the mated plug's outline.** `connector.scad` assumes the plug's footprint matches the header it pushes onto. Nobody has measured it, and the pod's whole pocket is built on that assumption. The smallest slot the plug passes gives the real outline, and the gap from the modelled 12.52 x 5.75 is the `pod_gap` the pocket actually needs |
+
+  One variable per row instead of one row confounding two. Print this before
+  either enclosure.
 
 If the filleted posts still shear, the fallback is to move the thread out of the
 lid entirely and into a fat, floor-braced boss in the tub, which reverses the
