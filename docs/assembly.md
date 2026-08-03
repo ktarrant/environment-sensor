@@ -45,9 +45,9 @@ Origin at the perfboard center, Z = 0 at the wiring face, +X toward row 20
 | ESP32 offset from board center | (-5.81, +1.27) mm |
 | ESP32 PCB bottom | 4.14 mm (1.6 board + 2.54 header plastic) |
 | ESP32 stack top (WROOM) | 8.84 mm |
-| **Connector, mated** | **13.10 mm - this sets the lid height** |
+| **Connector, mated** | **13.20 mm - this sets the lid height** |
 | Below the wiring face | 4.36 mm of untrimmed ESP32 header tail |
-| Total envelope | 17.46 mm |
+| Total envelope | 17.56 mm |
 
 Two consequences worth carrying into the enclosure:
 
@@ -57,9 +57,9 @@ Two consequences worth carrying into the enclosure:
 - **USB-C and the 4-pin cable exit opposite ends** - USB at -X, the cable at
   +X. Convenient: the two openings never compete for the same wall.
 
-The tallest item is the mated connector, not the ESP32. Note `xh_mated_h` is
-still an estimate (11.5 mm); it is the least-supported number in the whole
-model and it is the one the lid clearance depends on.
+The tallest item is the mated connector, not the ESP32. `xh_mated_h` is now
+measured at **11.6 mm** from `images/sensor_profile.jpg`. It does not include
+wire bend radius past the plug - budget that separately at the cable exit.
 
 ## Fasteners
 

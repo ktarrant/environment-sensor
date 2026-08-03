@@ -55,28 +55,43 @@ heights and the port cutout come from the photos and datasheets instead.
 - BME280 (temperature + humidity + pressure), I2C and SPI capable
 - I2C address **0x76** with SDO tied low (default), 0x77 with SDO high
 
-**Two things to check the moment the board is in hand:**
+### Identified from [images/sensor_bottom.jpg](images/sensor_bottom.jpg)
 
-1. **Which variant is it?** The listing title says *"BME280 **5V** Sensor
-   Module"*. The 5V board and the common 3.3V GY-BME280 are physically different
-   parts, and the 5V one usually carries an onboard LDO and/or level shifter.
-   **Count the pins** - 6 (VCC/GND/SCL/SDA/CSB/SDO) or 4 (I2C only) - and look
-   for a small regulator next to the VCC pin. For reference, the 3.3V variant is
-   [verified at 15.5 x 11.5 mm, 6-pin, no regulator](https://protosupplies.com/product/gy-bme280-pressure-humidity-temperature-sensor-module/).
+Purple board, silkscreened **GYBMEP**. It is **not** the 6-pin GY-BME280 this
+document originally assumed:
 
-2. **Is it actually a BME280?** These cheap multipacks are notorious for
-   shipping BMP280 instead - same footprint, no humidity. If ESPHome reports
-   pressure and temperature but humidity reads `nan`, that is what happened.
+- **4 pins** - VCC / GND / SCL / SDA, **I2C only**. This is why a 4-wire cable
+  is sufficient, and it is a neat consistency check on the whole build.
+- **Onboard 3.3V LDO** - the SOT-23 marked `662K` is an XC6206. So VCC tolerates
+  roughly 3.3-5V, which matches the listing's "5V" claim.
+- **One mounting hole.** An earlier note in this file said neither sensor
+  variant had mounting holes. That was wrong for the board we actually have.
+- **The connector is on the trace side, opposite the components.** Its pins pass
+  up through the board and are soldered on the component face - the four dark
+  blobs along the top edge of the photo are those solder joints, not the
+  connector body. So the sensor end's envelope **straddles** the board rather
+  than stacking on one side: ~11.6 mm of mated connector below, ~3.4 mm of
+  components and pin ends above, **15 mm across**.
+- **13 x 10 mm**, ~2.5 mm thick overall. A vendor reference gives 13 x 10, and
+  measuring the photo independently gave 12.3 x 10.4 - two unrelated sources
+  within 0.5 mm. (A different listing claimed 9 x 11 x 2; it disagrees with both
+  and is disregarded.) Re-shoot flat before designing the sensor enclosure.
 
-### Wiring depends on the answer to (1)
+### Powering it
 
-| Variant | VCC connects to |
-| --- | --- |
-| Plain 3.3V GY-BME280 (no regulator) | ESP32 **3V3** |
-| 5V variant **with** onboard LDO | ESP32 **VIN / 5V** - an LDO fed 3.3V will drop out and the sensor will read erratically or not enumerate |
+The build feeds VCC from the ESP32's **3V3**. That puts the onboard LDO near
+dropout, but a BME280 draws microamps, so an XC6206 passes ~3.1-3.2V and the
+part runs fine. **If readings ever go erratic, move VCC to VIN/5V first** - that
+gives the regulator proper headroom and costs nothing to try.
 
-Either way SCL/SDA go to the ESP32's I2C pins (GPIO22 / GPIO21 by default) and
-GND to GND.
+SCL/SDA go to GPIO22 / GPIO21; see [docs/assembly.md](docs/assembly.md).
+
+### Still worth confirming
+
+**Is it actually a BME280?** These cheap multipacks are notorious for shipping
+BMP280 instead - same footprint, no humidity. The `GYBMEP` silkscreen is used
+for both. If ESPHome reports pressure and temperature but humidity reads `nan`,
+that is what happened.
 
 ## Perfboard - 4 x 6 cm prototyping board
 
@@ -98,16 +113,17 @@ columns A..N, rows 1..20, and "40*60MM" - which settle the grid outright.
 Method check: measuring the round thru-holes the same way returns 1.04 mm
 against a 1.0 mm nominal, so these are good to roughly +/-5%.
 
-### The corner holes are smaller than they look
+### The corner holes take M2
 
-They measure **~1.85 mm** (four holes: 1.56 / 1.79 / 1.93 / 1.93). That makes
-them **M2 at the absolute best** - an M2 screw is 2.0 mm across the threads and
-will be interference or simply will not pass. **M3 is definitively out.**
+**Settled by screw test: M2 passes, M2.5 does not.** So the hole is in
+[2.05, 2.50); `params.scad` carries 2.20 as the midpoint.
 
-Options, in rough order of preference: open the holes to 2.2 mm and use M2;
-use M1.6; or skip screws entirely and capture the board by its edges in a slot,
-which avoids the question and is easier to print. Worth settling with an actual
-screw before any of this is committed to.
+Worth recording *how* that went, because it is a lesson about the method: my
+photo measurement said **1.85 mm**, which the screw test shows was low by at
+least 0.2 mm. The radial half-max technique under-reads on an **unplated** hole,
+because there is no bright annular ring to bound the edge against - it worked
+fine on the plated thru-holes precisely because those have one. A go/no-go check
+with a real screw beat careful image analysis here.
 
 ### Corrections the real photo forced
 
@@ -117,9 +133,14 @@ The listing image ([perfboard_4x6.png](images/perfboard_4x6.png)) is only
 | | listing image | actual board |
 | --- | --- | --- |
 | Grid rows | 21 (inferred) | **20** (silkscreen) |
-| Corner hole dia | 2.2-2.5 mm | **~1.85 mm** |
 | Edge features | oval *holes* | **SMD pads**, nothing drilled |
 | Edge pad pitch | assumed 2.54 | **~2.70**, its own pitch |
+
+On hole diameter the listing image was the one that got it right: it suggested
+2.2-2.5 mm, the photo measurement said 1.85, and the screw test landed on
+[2.05, 2.50). A low-resolution source is not wrong about everything, and a
+higher-resolution one is not right about everything - which is the argument for
+keeping the confidence tags in `params.scad` per-value rather than per-source.
 
 ## Connector - "JST-XH style" 2.54 mm, 4-pin
 
@@ -145,9 +166,20 @@ moulding around the pins is a fixed 4.90 mm of plastic either way.
 | Pin post | 0.64 mm square, 0.95 mm recommended drill |
 | Shroud offset | 2.35 mm one side of the pin row, 3.40 mm on the latch side |
 
-**Unverified and it matters:** the **mated height** with the plug pushed on.
-`xh_mated_h = 11.50` is an estimate, and it - not the bare header - is what sets
-the lid clearance. Measure the plug on a cable you already have.
+**Mated height: 11.6 mm** from the board surface to the plug's outer face,
+measured off [images/sensor_profile.jpg](images/sensor_profile.jpg) with the
+plug face lined up against the mat ruler's zero. This - not the bare 7.00 mm
+header - is what sets lid clearance. It does **not** include wire bend radius
+beyond the plug; budget that separately at the cable exit.
+
+The connector on that board is soldered slightly askew, so this was measured on
+a tilted assembly. A tilt projects *longer*, so 11.6 is more likely a small
+over-read than an under-read - the safe direction. Do not shave it.
+
+**Design for the tilt.** Hand-soldered connectors are not reliably square to
+their board. Wherever the housing constrains the connector or its cable exit,
+allow a few degrees of slop (`xh_solder_tilt`) rather than assuming a
+perpendicular plug - otherwise a unit that works on the bench will not close.
 
 ## Enclosure implications
 
@@ -157,15 +189,15 @@ the lid clearance. Measure the plug on a cable you already have.
 - **Mount through the perfboard's corner holes, with M2.** M2.5 does not pass.
   The ESP32's own mounting holes are unused - it is soldered to the perfboard -
   so the +/-0.6 mm disagreement in the ESP32 hole pattern no longer matters.
-- **The mated connector is the tallest thing inside**, at 13.1 mm above the
+- **The mated connector is the tallest thing inside**, at 13.2 mm above the
   wiring face, against 8.84 mm for the ESP32 stack. The lid is set by the
-  connector, and `xh_mated_h` behind it is still an estimate.
+  connector; `xh_mated_h` behind it is now measured at 11.6 mm.
 - **USB-C stands 3.31 mm proud of the perfboard end**, and exits the opposite
   end from the 4-pin cable.
 - **Allow 4.4 mm under the board** for untrimmed ESP32 header tails, plus the
   wiring itself.
-- **No mounting holes** on either sensor variant, so retention at the sensor end
-  is a slot or clip, not screw bosses.
+- **The sensor board has a single mounting hole**, so the sensor end needs one
+  boss plus something to stop rotation - a slot, a rib, or the connector itself.
 - **The sensor cannot share a sealed volume with the ESP32.** A WROOM-32 with
   Wi-Fi active self-heats enough to bias the temperature reading by several
   degrees C, and it will skew relative humidity along with it. The enclosure

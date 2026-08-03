@@ -209,10 +209,71 @@ xh_body_back  = 3.40;   // [MODEL] pin row to the latch side
 // Mated envelope - header PLUS the plug housing pushed onto it. This is what
 // actually sets the lid clearance, and it is the one number here that is NOT
 // from a datasheet.
-xh_mated_h = 11.50;     // [EST] NOT VERIFIED. Measure the plug on the cable you
-                        //   already have: its height when seated, from the
-                        //   board surface. Until then treat any lid clearance
-                        //   inside ~2 mm of this as unproven.
+xh_mated_h = 11.60;     // [PHOTO] measured off images/sensor_profile.jpg, where
+                        //   the plug's outer face was lined up with the mat
+                        //   ruler's zero: board surface to plug face reads
+                        //   11.6 mm. (The earlier 11.50 estimate was right.)
+                        //   Does NOT include wire bend radius beyond the plug -
+                        //   budget that separately at the cable exit.
+                        //
+                        //   CAVEAT: the connector on the photographed sensor
+                        //   board is soldered slightly askew, so this was
+                        //   measured on a tilted assembly. A tilt projects
+                        //   LONGER, not shorter, so 11.6 is more likely a small
+                        //   over-read than an under-read - the safe direction
+                        //   for clearance. Do not shave it.
+
+// Hand-soldered connectors are not reliably square to the board. Allow this
+// much angular slop wherever a housing constrains the connector or its cable
+// exit, rather than designing to a perfectly perpendicular plug.
+xh_solder_tilt = 5;     // [EST] degrees, from the built units
+
+// ===========================================================================
+// SENSOR BOARD - purple "GYBMEP" BME280 breakout
+//
+// Identified from images/sensor_bottom.jpg. NOT the 6-pin GY-BME280 the BOM
+// originally assumed - this one is 4-pin, I2C only, which is exactly why a
+// 4-wire cable suffices. It carries an onboard 3.3 V LDO (SOT-23 marked 662K =
+// XC6206), so VCC accepts anything from ~3.3 to 5 V.
+//
+// It also has ONE mounting hole, contradicting the earlier "no mounting holes
+// on either sensor variant" note in BOM.md.
+//
+// Outline: a vendor reference says 13 x 10, and measuring the photo
+// independently gave 12.3 x 10.4. Two unrelated sources within 0.5 mm, so 13x10
+// is adopted. (A different listing claimed 9 x 11 x 2 - that is the outlier and
+// is disregarded; it disagrees with both.)
+//
+// Everything else here is soft. The photo is hand-held and angled, the board
+// occupies only ~137x162 px in it, and the pad-pitch trick that worked
+// elsewhere could not resolve four pads at that scale. Re-shoot flat and
+// straight down before designing the sensor enclosure.
+// ===========================================================================
+
+bme_len       = 13.00;  // [REF, photo agrees +/-0.5] long axis
+bme_width     = 10.00;  // [REF, photo agrees +/-0.5] the connector is on this edge
+bme_pins      = 4;      // [PHOTO] VCC / GND / SCL / SDA - I2C only
+bme_has_ldo   = true;   // [PHOTO] 662K / XC6206 3.3 V regulator on board
+bme_mount_dia = 3.00;   // [EST] the single hole; not yet measured
+
+// Mounting hole center, from the PCB center. Estimated off the BOTTOM-side
+// photo by proportion, so the magnitudes are soft and the SIGN OF Y IS NOT
+// TRUSTWORTHY - a bottom view is mirrored, and this hole is off-center by
+// ~2 mm, so getting the mirror wrong puts a boss ~4 mm out of place.
+// Confirm against a TOP-side photo before committing to a screw boss.
+bme_mount_x = -3.25;    // [EST] toward the end away from the connector
+bme_mount_y = -2.10;    // [EST] MIRROR-AMBIGUOUS, see above
+
+// Connector pin row, measured in from the edge it sits on.
+bme_conn_inset = 1.50;  // [EST] the shroud slightly overhangs that edge, and
+                        //   overhangs both long sides too: the 12.52 mm body on
+                        //   a 10 mm wide board hangs over by ~1.3 mm a side.
+                        //   That is visible in images/sensor_bottom.jpg.
+bme_pcb_thick = 1.20;   // [EST] these breakouts run thinner than 1.6
+bme_comp_h    = 1.30;   // [EST] tallest part above the PCB; ~2.5 overall, which
+                        //   matches the "2-3 mm" a vendor reference quotes.
+                        //   Irrelevant to lid height either way - the mated
+                        //   connector at 11.6 mm dwarfs it.
 
 // --- Print and fit -----------------------------------------------------------
 

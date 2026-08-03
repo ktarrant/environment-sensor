@@ -51,8 +51,8 @@ it instead of raw coordinates so wiring notes transcribe directly into geometry.
 | --- | --- |
 | MCU | **DOIT ESP32 DevKit V1 clone, 30-pin** (15/row), USB-C, CP2102. Sold as ELEGOO, Micro Center #704603. **Not** the 38-pin board. |
 | Carrier | 4x6 cm perfboard, **14 x 20** grid at 2.54, silkscreen A..N / 1..20, corner holes take **M2 only** |
-| Connector | "JST-XH style" 4-pin. **2.54 pitch per the listing** (genuine JST XH is 2.50 - do not "correct" this) |
-| Sensor | BME280, likely the **5V variant** - unconfirmed, see BOM.md |
+| Connector | "JST-XH style" 4-pin. **2.54 pitch per the listing** (genuine JST XH is 2.50 - do not "correct" this). Mated height **11.6 mm** |
+| Sensor | Purple **GYBMEP** BME280 breakout. **4-pin, I2C only**, onboard 3.3V LDO (`662K`), **one** mounting hole, **13 x 10 mm**, ~2.5 thick |
 
 ## Wiring (MCU end)
 
@@ -110,6 +110,10 @@ Do not re-derive these; they cost real effort.
   photo measurement said 25.86; both were wrong.
 - Perfboard edge features are **SMD pads, not holes**, on their **own ~2.70 mm
   pitch**, not the 2.54 grid.
+- On the **sensor** board the connector body is on the **trace side, opposite
+  the components** - its pins pass up through the board. So that end's envelope
+  straddles the PCB (11.6 mm below, 3.4 mm above, 15 mm across) rather than
+  stacking on one face like the MCU end does.
 - OpenSCAD: an outer `color()` overrides children's colors in these renders.
   Color the parts individually, do not wrap the assembly.
 
@@ -120,7 +124,7 @@ manifold; BOM and measurement/assembly docs; photos in `images/`.
 
 **Next session: design the enclosures.** Two of them. Starting facts:
 
-- MCU envelope: **17.46 mm** total (13.10 above the wiring face, 4.36 below).
+- MCU envelope: **17.56 mm** total (13.20 above the wiring face, 4.36 below).
   The **mated connector**, not the ESP32, sets the lid height.
 - USB-C stands **3.31 mm proud** of the perfboard end, and exits the **opposite
   end** from the 4-pin cable, so the two openings never share a wall.
@@ -131,14 +135,26 @@ manifold; BOM and measurement/assembly docs; photos in `images/`.
 
 **Open, in priority order:**
 
-1. `xh_mated_h = 11.50` is an `[EST]` and it is what sets lid height. The user
-   should measure the seated plug. Weakest number in the model.
-2. The **sensor end is entirely unmodeled** - no BME280 model, and the board
-   variant is unconfirmed (4-pin vs 6-pin decides the wiring; a 5V variant with
-   an LDO must be fed VIN, not 3V3).
-3. **The BME280 must not share a sealed volume with the ESP32.** WROOM
+1. **The BME280 must not share a sealed volume with the ESP32.** WROOM
    self-heating biases temperature by several degrees and drags RH with it.
    Plan a vented, thermally separated sensor chamber. This is the main reason
-   the design is two enclosures.
-4. `pb_rows`/`pb_cols` grid counts are exact, but `pb_edge_pad_*` dimensions are
-   `[EST]`. Cosmetic only.
+   the design is two enclosures, and it is the main design constraint left.
+2. The **sensor end is unmodeled**. The part is identified and its outline is
+   agreed by two sources (13 x 10), but the mounting hole, its position, and the
+   thicknesses are all `[EST]`. **Ask for a flat, straight-down photo** before
+   designing that enclosure - the method in `docs/measuring.md` will then give
+   ~0.1 mm, which the hand-held shots we have cannot.
+3. **Connectors are hand-soldered and sit slightly askew** - the built sensor
+   board is visibly tilted. Allow `xh_solder_tilt` (~5 deg) wherever a housing
+   constrains the connector or the cable exit. A design assuming a perpendicular
+   plug will bench-test fine and then refuse to close.
+4. `pb_edge_pad_*` dimensions are `[EST]`. Cosmetic only.
+
+**Recently closed** (do not redo): `xh_mated_h` is now measured at 11.60 from
+`images/sensor_profile.jpg`, where the plug face was aligned to the ruler zero -
+the 11.50 estimate was very nearly right. Sensor variant is resolved: 4-pin,
+I2C-only, with an onboard LDO, which is why 4 wires suffice.
+
+One live caution: VCC is fed from **3V3**, which sits the sensor's LDO near
+dropout. It works at the BME280's microamp draw, but if readings ever go
+erratic, moving VCC to VIN/5V is the first thing to try.
