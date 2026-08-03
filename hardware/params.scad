@@ -43,16 +43,14 @@ esp_width = 28.50;  // [MODEL] photo: 28.7 +/- 0.4 -> agrees
 esp_corner_r = 1.5; // [EST]   visible radius, not critical
 
 // Header rows, symmetric about the board centerline.
-esp_row_spacing = 25.40;  // [OPEN] nominal 10 pitches = breadboard-compatible.
-                          //   BUT: 3MF reads 25.74 and the photo reads 25.86,
-                          //   and both put the rows 1.38-1.40 mm in from the
-                          //   long edges. The photo's vertical axis is biased
-                          //   ~1% high (board sits off-axis in frame), which
-                          //   explains part but not all of the gap.
-                          //   Unresolved. Does NOT affect the enclosure - the
-                          //   pins sit inside the board footprint either way.
-                          //   Resolve with a printed gauge before making any
-                          //   part that engages the headers.
+esp_row_spacing = 25.40;  // [PROVEN] exactly 10 pitches. The board is soldered
+                          //   into the perfboard with its two header rows on
+                          //   columns B and L, which are 10 * 2.54 apart. A
+                          //   part physically seated in a 2.54 grid cannot be
+                          //   at any other spacing, so this is now certain.
+                          //   (Was [OPEN]: the 3MF read 25.74 and the photo
+                          //   25.86. Both were high - the 3MF is loose here and
+                          //   the photo's vertical axis carried a ~1% bias.)
 
 // Mounting holes - one near each corner. THIS BOARD HAS THEM; the 38-pin
 // variants mostly do not, which is a real advantage for enclosure design.
@@ -167,17 +165,54 @@ pb_pad_dia  = 1.80;  // [EST] annular ring around each thru-hole
 pb_mount_dx = 28.17;  // [PHOTO] +/- along the 60 mm axis (pattern 56.34 mm)
 pb_mount_dy = 18.01;  // [PHOTO] +/- along the 40 mm axis (pattern 36.02 mm)
                       //   i.e. ~1.83 and ~1.99 mm in from the respective edges.
-pb_mount_dia = 1.85;  // [PHOTO] four holes gave 1.56 / 1.79 / 1.93 / 1.93 by
-                      //   radial half-max, a method that returned 1.04 on the
-                      //   1.0 mm thru-holes. So ~2.0 mm nominal at most.
+pb_mount_dia = 2.20;  // [SCREW TEST] M2 passes, M2.5 does not -> the hole is
+                      //   in [2.05, 2.50). 2.20 is the midpoint.
+                      //   My photo measurement said 1.85, which the screw test
+                      //   shows was low by at least 0.2 mm; the radial half-max
+                      //   method under-reads on an unplated hole with no bright
+                      //   annular ring to bound it. The screw wins.
                       //
-                      //   CONSEQUENCE: this is an M2 hole at best, and an M2
-                      //   screw (2.0 mm major dia) will be interference or will
-                      //   not pass at all. M3 is definitively out. Plan on M2
-                      //   with the holes opened up, or M1.6, or do not screw
-                      //   through them at all and capture the board edges
-                      //   instead. Worth settling with an actual screw.
+                      //   CONSEQUENCE: fasten with M2. M2.5 and M3 are out.
 
+
+// ===========================================================================
+// CONNECTOR - "JST-XH style" 2.54 mm, 4-pin, board header
+//
+// Joins the MCU enclosure to the sensor enclosure. Both ends already built.
+//
+// ON THE PITCH: genuine JST XH (B4B-XH-A) is 2.50 mm, per JST's own datasheet.
+// The part in this build is a "JST-XH *style*" clone sold as 2.54 mm, and clone
+// makers do build true 2.54 versions so they drop into 0.1 in perfboard. We use
+// 2.54. Note the two are nearly indistinguishable by fit at 4 pins - the spans
+// differ by 0.12 mm total, which a 0.95 mm hole swallows - so if this ever
+// needs settling, settle it on the listing, not on how it seats.
+//
+// Body dimensions are from the KiCad model of the genuine B4B-XH-A, which
+// agrees with the JST footprint outline. Only the pin span is rescaled to 2.54;
+// the moulding around it is a fixed 4.90 mm of plastic.
+// ===========================================================================
+
+xh_pitch = 2.54;   // [SPEC] per the listing for this part (JST proper is 2.50)
+xh_pins  = 4;      // [EXACT]
+xh_pin_span = (xh_pins - 1) * xh_pitch;          // [DERIVED] 7.62
+xh_body_len = xh_pin_span + 4.90;                // [DERIVED] 12.52
+xh_body_depth = 5.75;   // [MODEL] across the pin row
+xh_body_h     = 7.00;   // [MODEL] shroud height above the PCB top face
+xh_pin_below  = 3.40;   // [MODEL] pin tails below the PCB
+xh_pin_sq     = 0.64;   // [EXACT] standard XH square post
+xh_drill      = 0.95;   // [MODEL] recommended PCB hole
+
+// The shroud is not centered on the pin row: the latch side is deeper.
+xh_body_front = 2.35;   // [MODEL] pin row to the shallow side
+xh_body_back  = 3.40;   // [MODEL] pin row to the latch side
+
+// Mated envelope - header PLUS the plug housing pushed onto it. This is what
+// actually sets the lid clearance, and it is the one number here that is NOT
+// from a datasheet.
+xh_mated_h = 11.50;     // [EST] NOT VERIFIED. Measure the plug on the cable you
+                        //   already have: its height when seated, from the
+                        //   board surface. Until then treat any lid clearance
+                        //   inside ~2 mm of this as unproven.
 
 // --- Print and fit -----------------------------------------------------------
 

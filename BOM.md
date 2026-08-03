@@ -121,13 +121,49 @@ The listing image ([perfboard_4x6.png](images/perfboard_4x6.png)) is only
 | Edge features | oval *holes* | **SMD pads**, nothing drilled |
 | Edge pad pitch | assumed 2.54 | **~2.70**, its own pitch |
 
+## Connector - "JST-XH style" 2.54 mm, 4-pin
+
+Carries power and I2C between the two enclosures.
+
+**On the pitch:** genuine JST XH (`B4B-XH-A`) is **2.50 mm**, per
+[JST's own datasheet](https://www.jst-mfg.com/product/pdf/eng/eXH.pdf). This
+build uses a *"JST-XH **style**"* part sold as 2.54 mm, and clone makers do
+build true 2.54 versions specifically to drop into 0.1 in perfboard. We model
+2.54. Note the two are near-indistinguishable by fit at 4 pins - the pin spans
+differ by 0.12 mm total (7.50 vs 7.62), which a 0.95 mm hole absorbs entirely -
+so the listing settles this, not how it seats.
+
+Body geometry is from the KiCad model of the genuine `B4B-XH-A`, which agrees
+with JST's own footprint outline. Only the pin span is rescaled to 2.54; the
+moulding around the pins is a fixed 4.90 mm of plastic either way.
+
+| | |
+| --- | --- |
+| Body | **12.52 x 5.75 mm** (12.40 at genuine 2.50 pitch) |
+| Height above board | **7.00 mm** |
+| Pin tails below board | **3.40 mm** |
+| Pin post | 0.64 mm square, 0.95 mm recommended drill |
+| Shroud offset | 2.35 mm one side of the pin row, 3.40 mm on the latch side |
+
+**Unverified and it matters:** the **mated height** with the plug pushed on.
+`xh_mated_h = 11.50` is an estimate, and it - not the bare header - is what sets
+the lid clearance. Measure the plug on a cable you already have.
+
 ## Enclosure implications
 
 - **Two enclosures**, MCU end and sensor end, joined by a 4-pin cable. Both
   boards are already built and wired; the enclosures are the remaining work.
-- **Mount through the perfboard's corner holes.** The ESP32's own mounting holes
-  are unused - it is soldered to the perfboard - so the +/-0.6 mm disagreement
-  in the ESP32 hole pattern no longer matters to anything.
+  The MCU module as built is documented in [docs/assembly.md](docs/assembly.md).
+- **Mount through the perfboard's corner holes, with M2.** M2.5 does not pass.
+  The ESP32's own mounting holes are unused - it is soldered to the perfboard -
+  so the +/-0.6 mm disagreement in the ESP32 hole pattern no longer matters.
+- **The mated connector is the tallest thing inside**, at 13.1 mm above the
+  wiring face, against 8.84 mm for the ESP32 stack. The lid is set by the
+  connector, and `xh_mated_h` behind it is still an estimate.
+- **USB-C stands 3.31 mm proud of the perfboard end**, and exits the opposite
+  end from the 4-pin cable.
+- **Allow 4.4 mm under the board** for untrimmed ESP32 header tails, plus the
+  wiring itself.
 - **No mounting holes** on either sensor variant, so retention at the sensor end
   is a slot or clip, not screw bosses.
 - **The sensor cannot share a sealed volume with the ESP32.** A WROOM-32 with

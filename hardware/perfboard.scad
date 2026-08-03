@@ -17,6 +17,21 @@ include <params.scad>
 show_grid = true;   // false gives a fast preview - the grid is ~320 holes
 $fn = $preview ? 16 : 32;
 
+// --- silkscreen grid addressing --------------------------------------------
+//
+// The board is labeled with columns A..N and rows 1..20. Those labels are on
+// the WIRING face; components mount on the opposite face. The mapping below is
+// oriented so that, viewed from the component side (+Z) with row 20 up, column
+// A is to the left - which is how images/esp32_assembled_top.jpg reads.
+//
+// Use pb_hole("L", 2) rather than raw coordinates, so wiring notes transcribe
+// directly into geometry and stay checkable against the build.
+
+function pb_row_x(n) = -(pb_rows-1)*pb_pitch/2 + (n-1)*pb_pitch;   // n = 1..20
+function pb_col_i(L) = search(L, "ABCDEFGHIJKLMN")[0];             // "A".."N"
+function pb_col_y(L) =  (pb_cols-1)*pb_pitch/2 - pb_col_i(L)*pb_pitch;
+function pb_hole(L, n) = [pb_row_x(n), pb_col_y(L)];
+
 // Corner hole centers. Enclosure code should call this rather than re-deriving
 // the pattern, so that a corrected inset propagates everywhere at once.
 function pb_mount_positions() =
