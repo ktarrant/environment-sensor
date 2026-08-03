@@ -120,9 +120,13 @@ Do not re-derive these; they cost real effort.
 ## Status and what is next
 
 **Done:** ESP32, perfboard, connector and MCU assembly models, all building and
-manifold; BOM and measurement/assembly docs; photos in `images/`.
+manifold; BOM and measurement/assembly docs; photos in `images/`. Enclosure plan
+in `docs/enclosure.md` - **three complete units**, one per room, each two shells
+on a 10-20 cm pigtail. **MCU box drafted** (`hardware/enclosure_mcu.scad`, tub +
+lid, 67.5 x 44.4 x 27.6, 4x M2x16 from below), building manifold with an empty
+`make check`. Not printed.
 
-**Next session: design the enclosures.** Two of them. Starting facts:
+**Next: the sensor pod**, then the three mount adapters. Starting facts:
 
 - MCU envelope: **17.56 mm** total (13.20 above the wiring face, 4.36 below).
   The **mated connector**, not the ESP32, sets the lid height.

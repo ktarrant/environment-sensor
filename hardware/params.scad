@@ -283,6 +283,65 @@ wall      = 2.00;
 nozzle    = 0.40;
 layer     = 0.20;
 
+// M2 is the only fastener in this build - the perfboard's corner holes settle
+// that (M2.5 does not pass). One screw per corner does three jobs at once:
+// it enters from OUTSIDE the tub floor, passes up the standoff, through the
+// board, and taps into a post hanging from the lid. See enclosure_mcu.scad.
+m2_free   = 2.40;  // [EST] clearance hole for an M2 shank
+m2_pilot  = 1.70;  // [EST] self-tapping pilot in PLA/PETG. Print a test column
+                   //       before committing - printers vary more here than
+                   //       anywhere else in this file.
+m2_head_d = 3.80;  // [EST] pan head
+m2_engage = 6.00;  // thread engagement in the lid post
+
+// ===========================================================================
+// ENCLOSURE - MCU box
+//
+// Everything here is a choice, not a measurement, so the tags are [DESIGN]
+// unless noted. The dimensions these choices have to RESPECT all live above.
+// ===========================================================================
+
+enc_wall      = 2.00;   // [DESIGN] side walls
+enc_floor     = 2.40;   // [DESIGN] thicker than the walls: the screw heads are
+                        //   counterbored into it, so it loses 1.4 mm locally.
+enc_lid_t     = 2.00;   // [DESIGN]
+enc_r_out     = 3.00;   // [DESIGN] outer corner radius
+enc_r_in      = 0.80;   // [DESIGN] inner corner fillet. MUST stay small: only
+                        //   1.76 mm of slack exists at the board's corners, and
+                        //   a radius over ~1.0 eats into them. Asserted below.
+
+enc_standoff_h = 6.00;  // [DESIGN] wiring face to the tub's inner floor. Must
+                        //   clear 4.36 mm of untrimmed ESP32 header tails PLUS
+                        //   the hand-laid wiring on that face, which nobody has
+                        //   measured. First thing to raise if the board will
+                        //   not sit down flat.
+enc_boss_od    = 5.00;  // [DESIGN] standoff tube under each corner hole
+enc_post_od    = 4.20;  // [DERIVED] the lid post over each corner hole. NOT a
+                        //   free choice: at the -X/+Y corner the ESP32's own
+                        //   PCB edge is 2.49 mm away, so anything over ~4.6
+                        //   collides with the board it is meant to hold down.
+                        //   Asserted in enclosure_mcu.scad.
+
+enc_cable_head = 4.00;  // [EST] room above the MATED plug face for the cable to
+                        //   turn and leave through the wall. This is a guess
+                        //   standing in for a bend radius nobody has measured -
+                        //   the cable finishes its bend outside the box, which
+                        //   is what keeps this number as small as 4.
+cable_od       = 3.00;  // [EST] 4-conductor pigtail. Measure it.
+enc_exit_w     = 5.00;  // [DESIGN] cable notch width: cable_od plus room for
+                        //   xh_solder_tilt to throw the plug sideways.
+
+usb_cut_margin = 0.80;  // [DESIGN] per side, around the USB-C shell
+usb_plug_w     = 12.50; // [EST] the PLUG's overmold, not the receptacle. The
+usb_plug_h     =  7.50; // [EST]   shell face lands 0.45 mm inside the outer
+usb_relief_d   =  1.20; // [DESIGN] wall face, so without this relief pocket a
+                        //   fat cable cannot seat. Both [EST] values are pure
+                        //   guesses - put them on the fit gauge.
+
+enc_vent_w     = 1.60;  // [DESIGN] 4 nozzle widths - bridges and prints clean
+enc_vent_pitch = 4.40;  // [DESIGN]
+enc_vents      = 9;     // [DESIGN] per long wall
+
 // --- Guards ------------------------------------------------------------------
 
 assert(esp_pins_per_row == 15,
@@ -297,3 +356,19 @@ assert(usb_width < esp_width, "USB-C wider than the board");
 // Buttons sit alongside the corner holes; catch any overlap after an edit.
 assert(esp_btn_dy + esp_btn/2 < esp_hole_dy - esp_hole_dia/2,
        "EN/BOOT buttons overlap the corner mounting holes");
+
+// --- enclosure guards --------------------------------------------------------
+
+// The screw passes through the board's own corner hole on its way to the lid
+// post. This is the screw test, encoded.
+assert(pb_mount_dia > 2.05,
+       "an M2 shank will not pass the perfboard corner hole");
+assert(enc_standoff_h > hdr_below - hdr_plastic_h - pb_thick,
+       "standoff shorter than the untrimmed ESP32 header tails");
+assert(enc_post_od > m2_pilot + 4*nozzle,
+       "lid post wall too thin to hold a tapped M2 thread");
+assert(enc_boss_od > m2_free + 4*nozzle,
+       "standoff tube wall too thin");
+assert(enc_exit_w > cable_od,
+       "cable exit narrower than the cable");
+assert(enc_vent_w >= 3*nozzle, "vent slots too narrow to print open");

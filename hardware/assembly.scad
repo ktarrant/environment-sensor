@@ -46,12 +46,33 @@ function esp_pin_xy(name, is_row_a) =
       (is_row_a ? -1 : 1) * esp_row_spacing/2 ];
 
 // --- placement, solved from wire 1 (3V3 -> L2) ------------------------------
+//
+// Exposed as functions as well as variables: `use <assembly.scad>` imports
+// functions and modules but not variables, and the enclosure needs these
+// numbers without re-deriving them. The variables below are set FROM the
+// functions so there is still exactly one definition of each.
 
-esp_offset = pb_hole("L", 2) - esp_pin_xy("3V3", true);
-esp_z      = pb_thick + hdr_plastic_h;      // header plastic is the standoff
+function asm_esp_offset()  = pb_hole("L", 2) - esp_pin_xy("3V3", true);
+function asm_esp_z()       = pb_thick + hdr_plastic_h;
+function asm_conn_center() = [pb_row_x(20), (pb_col_y("C") + pb_col_y("F"))/2];
+
+// How far the ESP32's PCB hangs past the perfboard's -X edge, and how far the
+// USB-C shell then stands proud of that same edge.
+function asm_end_overhang() = (abs(asm_esp_offset()[0]) + esp_len/2) - pb_len/2;
+function asm_usb_proud()    = -pb_len/2
+                              - (asm_esp_offset()[0] - esp_len/2 - usb_overhang);
+
+// Height budget, measured from the wiring face (Z = 0).
+function asm_top_f()   = asm_esp_z() + pcb_thick + wroom_height;   // ESP32 stack
+function asm_conn_f()  = pb_thick + xh_mated_h;                    // mated plug
+function asm_below_f() = max(hdr_below - hdr_plastic_h - pb_thick, // pin tails
+                             xh_pin_below);
+
+esp_offset = asm_esp_offset();
+esp_z      = asm_esp_z();       // header plastic is the standoff
 
 // Connector occupies row 20, columns C..F, pin 1 at C.
-conn_center = [pb_row_x(20), (pb_col_y("C") + pb_col_y("F"))/2];
+conn_center = asm_conn_center();
 conn_rot    = -90;   // maps the connector's local +X pin axis onto -Y (C -> F)
 
 // --- the remaining three wires must now land on their own holes -------------
@@ -86,16 +107,24 @@ module mcu_assembly() {
         rotate([0, 0, conn_rot]) xh_header();
 }
 
+// Clearance solid for the whole module. An enclosure that intersects this
+// collides with the hardware - see part = "check" in enclosure_mcu.scad.
+module mcu_keepout(gap = clearance) {
+    perfboard_keepout(gap);
+    translate([esp_offset[0], esp_offset[1], esp_z]) esp32_keepout(gap);
+    translate([conn_center[0], conn_center[1], pb_thick])
+        rotate([0, 0, conn_rot]) xh_mated_keepout(gap);
+}
+
 // Overall envelope, for sizing the housing.
-asm_top    = esp_z + pcb_thick + wroom_height;      // tallest of the ESP32 stack
-asm_conn   = pb_thick + xh_mated_h;                 // connector, mated
+asm_top    = asm_top_f();                           // tallest of the ESP32 stack
+asm_conn   = asm_conn_f();                          // connector, mated
 asm_height = max(asm_top, asm_conn);
 
 // How far things stick out the wiring side. The ESP32's header tails dominate
 // and are untrimmed in this build (visible in esp32_assembled_profile.jpg), so
 // the housing needs this much clearance under the board plus the wiring itself.
-asm_below = max(hdr_below - hdr_plastic_h - pb_thick,   // ESP32 pin tails
-                xh_pin_below);                          // connector tails
+asm_below = asm_below_f();
 echo(str("ESP32 offset      = ", esp_offset, " mm"));
 echo(str("ESP32 stack top   = ", asm_top,  " mm above the wiring face"));
 echo(str("connector, mated  = ", asm_conn, " mm  <- sets the lid height"));

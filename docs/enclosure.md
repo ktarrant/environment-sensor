@@ -101,16 +101,45 @@ so a chunky USB-C overmold can seat.
 
 ### Construction
 
-- Tub + lid. Print the tub open-side-up: no supports, and the board seat and
-  bosses come out on the flat.
-- Four bosses on the 56.34 x 36.02 pattern, M2 clearance through the perfboard
-  into a pilot boss. Self-tapping M2 for v1; heat-set inserts are the upgrade
-  if a unit is opened repeatedly.
-- Lid on 4x M2 into corner posts. Do not design a snap-fit first - snap fits
-  need a tuned clearance, and `clearance` is still `[EST]` at 0.20.
-- Vent slots in the walls only, vertical, ~1.6 mm (4 nozzle widths) so they
+- Tub + lid. Print the tub open-side-up and the lid face-down: no supports
+  anywhere, and the only bridge is the top edge of the USB-C window.
+- Vent slots in the walls only, vertical, 1.6 mm (4 nozzle widths) so they
   bridge cleanly. The MCU box vents to keep itself cool; it does **not** need
   to be sensor-grade.
+- Do not design a snap-fit lid first - snap fits need a tuned clearance, and
+  `clearance` is still `[EST]` at 0.20.
+
+### How it fastens: one screw per corner
+
+The obvious scheme - four screws for the board, four more for the lid - does
+not fit. The board is 60 x 40 in an interior that is 63.5 x 40.4, and its
+corner holes sit ~1.9 mm from the edges, so the four corners are the *only*
+place a post can stand and the board is already using them. Widening the box
+to make room for separate lid posts costs ~10 mm across.
+
+So one screw does three jobs:
+
+```
+   M2 x 16, head counterbored into the OUTSIDE of the floor
+     |  up through the standoff tube        (clearance)
+     |  through the perfboard's corner hole (2.2 mm, clearance)
+     +->into a post hanging off the lid     (tapped, 6 mm engagement)
+```
+
+The lid posts drop into the board's corner holes as the lid closes, so the lid
+also **locates** the board. The heads end up on the outside of the floor, which
+is where a mount adapter gets captured later without adding fasteners - at the
+cost of ~2 mm more screw length per adapter.
+
+Two consequences:
+
+- The screws are on the bottom, so a wall-mounted unit comes off its keyholes
+  before it can be opened. For a sensor that is opened once a year, that is the
+  right trade.
+- `enc_post_od` is **not a free choice**. At the -X/+Y corner the ESP32's own
+  PCB edge is 2.49 mm from the screw axis, so the post is 4.20 mm and clears
+  the board it is holding down by **0.39 mm**. Widening it collides. There is
+  an `assert()` on exactly this.
 
 ## Sensor pod
 
@@ -211,9 +240,9 @@ In priority order. Items 1 and 2 block printing; 3 blocks unit B's shell only.
 
 | | |
 | --- | --- |
-| M0 | Take photos 1-3; add the enclosure block to `params.scad`, tagged |
+| M0 | Take photos 1-3; add the enclosure block to `params.scad`, tagged. **Params done; photos outstanding** |
 | M1 | Print the fit gauge; replace `clearance = 0.20 [EST]` with a measured value |
-| M2 | MCU box v1, plain, no mount. Fit the real board. Iterate the cable exit |
+| M2 | MCU box v1, plain, no mount. **Drafted - see below.** Fit the real board; iterate the cable exit |
 | M3 | Sensor pod, plain vented. Fit the real sensor board |
 | M4 | Three mount adapters; print unit A and unit C |
 | M5 | The bud/leaf shell for unit B, in PETG |
@@ -221,6 +250,54 @@ In priority order. Items 1 and 2 block printing; 3 blocks unit B's shell only.
 
 M6 is not optional. Three sensors that disagree by a degree are three sensors
 you cannot trust; measure the offsets while they are still on the same table.
+
+## What the first draft actually came out at
+
+`hardware/enclosure_mcu.scad`, built and manifold, collision check empty. Not
+printed yet - every number below is a model, not a measurement.
+
+| | |
+| --- | --- |
+| Exterior | **67.5 x 44.4 x 27.6 mm** |
+| Interior | 63.5 x 40.4 x 23.2 |
+| Board sits | 6.0 mm above the inner floor, 17.2 below the rim |
+| Fasteners | 4x **M2 x 16**, from below |
+| Lid post clearance to the ESP32 | 0.39 mm |
+| USB-C shell face | 0.45 mm inside the outer wall - hence the relief pocket |
+
+![exploded](../images/renders/enclosure_mcu_exploded.png)
+
+Two details in the render that look like mistakes and are not: the cable exit
+is off the box's midline, because the connector sits on columns C..F rather
+than centered; and the box is much deeper above the board than below, because
+the mated plug is 13.2 mm tall while the ESP32 stack is only 8.84.
+
+### The collision check
+
+`make check` intersects the box with the hardware keepouts and must print
+`Current top level object is empty`. It caught nothing structural, but writing
+it forced one honest correction: the first version reported eight collisions,
+all of them the standoff tops and post bottoms - the surfaces that are supposed
+to touch the board. So the check now exempts a bearing ring at each corner
+hole, and nothing else in the box is allowed to touch the hardware.
+
+Two real defects it did *not* catch, both found by rendering the thing and
+looking at it, which is worth remembering as a limit of the method:
+
+1. The cable exit was cut to the same height in the lid as in the tub, so the
+   channel was open at the top and the cable would lift straight out. The lid
+   is cut only through its locating lip now; the plate roofs the hole.
+2. The strain-relief ribs were inside the `difference()`, so the notch erased
+   the very bumps meant to pinch the cable. They are unioned back on after.
+
+### Still soft in this draft
+
+- `enc_standoff_h = 6.00` clears the 4.36 mm of header tails, but the
+  hand-laid wiring on that face has never been measured. First thing to raise
+  if the board will not sit flat.
+- `enc_cable_head = 4.00` is a stand-in for a bend radius nobody has measured.
+- `usb_plug_w/h` - the relief pocket is sized for a guess at the overmold.
+- All three belong on the fit gauge.
 
 ## Risks
 

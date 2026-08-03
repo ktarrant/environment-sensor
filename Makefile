@@ -4,8 +4,8 @@ CAM_ISO := --camera=0,0,0,62,0,205,150 --imgsize=1400,1000
 CAM_TOP := --camera=0,0,0,0,0,0,105 --projection=o --imgsize=1400,900
 SCHEME  := --colorscheme=Tomorrow
 
-.PHONY: all esp32 perfboard connector sensor assembly renders clean
-all: esp32 perfboard connector sensor assembly renders
+.PHONY: all esp32 perfboard connector sensor assembly enclosure check renders clean
+all: esp32 perfboard connector sensor assembly enclosure renders
 
 connector: build/connector.stl
 build/connector.stl: hardware/connector.scad hardware/params.scad
@@ -40,6 +40,32 @@ images/renders/assembly_iso.png: hardware/assembly.scad $(DEPS)
 	@mkdir -p images/renders
 	$(OPENSCAD) -o $@ --camera=0,0,0,62,0,200,170 --imgsize=1400,1000 $(SCHEME) $<
 
+# --- enclosures --------------------------------------------------------------
+# `make check` renders the box intersected with the hardware keepout. It must
+# print "Current top level object is empty" - anything else is a collision.
+ENC_DEPS := hardware/params.scad hardware/enclosure_common.scad \
+            hardware/assembly.scad hardware/perfboard.scad hardware/esp32.scad \
+            hardware/connector.scad
+enclosure: build/enclosure_mcu_base.stl build/enclosure_mcu_lid.stl
+build/enclosure_mcu_base.stl: hardware/enclosure_mcu.scad $(ENC_DEPS)
+	@mkdir -p build
+	$(OPENSCAD) -o $@ -D 'part="base"' $<
+build/enclosure_mcu_lid.stl: hardware/enclosure_mcu.scad $(ENC_DEPS)
+	@mkdir -p build
+	$(OPENSCAD) -o $@ -D 'part="lid"' $<
+check: hardware/enclosure_mcu.scad $(ENC_DEPS)
+	@mkdir -p build
+	$(OPENSCAD) -o build/enclosure_mcu_check.stl -D 'part="check"' $< 2>&1 \
+	  | grep -E "top level object|WARNING"
+images/renders/enclosure_mcu_iso.png: hardware/enclosure_mcu.scad $(ENC_DEPS)
+	@mkdir -p images/renders
+	$(OPENSCAD) -o $@ -D 'part="assembled"' -D 'show_grid=false' \
+	  --camera=0,0,4,62,0,205,185 --imgsize=1400,1000 $(SCHEME) $<
+images/renders/enclosure_mcu_exploded.png: hardware/enclosure_mcu.scad $(ENC_DEPS)
+	@mkdir -p images/renders
+	$(OPENSCAD) -o $@ -D 'part="exploded"' -D 'show_grid=false' \
+	  --camera=0,0,8,66,0,205,215 --imgsize=1400,1100 $(SCHEME) $<
+
 esp32: build/esp32.stl
 build/esp32.stl: hardware/esp32.scad hardware/params.scad
 	@mkdir -p build
@@ -54,7 +80,9 @@ build/perfboard.stl: hardware/perfboard.scad hardware/params.scad
 renders: images/renders/esp32_iso.png images/renders/esp32_top.png \
          images/renders/perfboard_top.png images/renders/assembly_top.png \
          images/renders/assembly_iso.png images/renders/sensor_assembly_iso.png \
-         images/renders/sensor_assembly_top.png
+         images/renders/sensor_assembly_top.png \
+         images/renders/enclosure_mcu_iso.png \
+         images/renders/enclosure_mcu_exploded.png
 images/renders/perfboard_top.png: hardware/perfboard.scad hardware/params.scad
 	@mkdir -p images/renders
 	$(OPENSCAD) -o $@ --camera=0,0,0,0,0,0,140 --projection=o --imgsize=1200,850 $(SCHEME) $<
