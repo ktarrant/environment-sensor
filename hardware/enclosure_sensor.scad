@@ -59,16 +59,16 @@ $fn = $preview ? 24 : 48;
 
 // --- the cavity, derived from the board -------------------------------------
 
-in_x0     = -(bme_len/2 + clearance);        // board end
+in_x0     = -(bme_len/2 + enc_board_gap);    // board end
 in_x1     = bme_conn_x1() + pod_gap;         // past the connector
 pocket_x0 = bme_conn_x0() - pod_gap;
 
-in_y_board = bme_width/2   + clearance;      // sensor chamber
+in_y_board = bme_width/2   + enc_board_gap;  // sensor chamber
 in_y_conn  = xh_body_len/2 + pod_gap;        // connector, at the board
 tilt       = xh_mated_h * tan(xh_solder_tilt);
 in_y_max   = in_y_conn + tilt;               // ...and at the plug's face
 
-in_z1  = bme_above() + clearance;            // top of the sensor chamber
+in_z1  = bme_above() + enc_board_gap;        // top of the sensor chamber
 z_plug = -xh_mated_h;                        // the mated plug's outer face
 in_z0  = z_plug - pod_cable_room;
 
@@ -87,9 +87,10 @@ out_z0     = in_z0 - pod_wall;
 cable_x  = (bme_conn_x0() + bme_conn_x1())/2;
 cable_d  = cable_od - pod_cable_grip;        // split gland: the halves clamp it
 grille_l = 2*in_y_board - 2.0;
-cross_z  = in_z1 - 1.4;                      // cross-flow slot, level with the
-                                             // BME280's can and clear of both
-                                             // the chamber ceiling and the board
+// Cross-flow slot, placed off the SENSOR rather than off the ceiling: it wants
+// to be level with the BME280's can, and hanging it off in_z1 walked it up into
+// the chamber roof and left a 0.6 mm sliver there when the chamber grew.
+cross_z  = bme_pcb_thick + pod_vent_w/2 + 0.10;
 
 // The pocket leans out as it deepens. Where it ends up matters twice: against
 // the side wall, and against the +X screw.
@@ -235,18 +236,12 @@ else if (part == "check") {
     // are exempt: here that is the Z = 0 plane itself, where the ledge holds
     // the board's trace face and the shoulder holds the connector's flange.
     //
-    // The keepout is asked for a hair under `clearance` on purpose. This pod's
-    // cavity IS the board plus exactly `clearance`, so at the full value every
-    // cavity wall is coplanar with a keepout face and CGAL returns a zero-facet
-    // artifact instead of an empty set - indistinguishable, at a glance, from a
-    // real hit. Ten microns less asks the same question and answers it cleanly.
-    check_gap = clearance - 0.01;
     intersection() {
         union() { pod_half(1); pod_half(-1); }
         difference() {
-            sensor_keepout(check_gap);
-            translate([in_x0, -in_y_max, -check_gap - 0.01])
-                cube([in_x1 - in_x0, 2*in_y_max, 2*check_gap + 0.02]);
+            sensor_keepout();
+            translate([in_x0, -in_y_max, -clearance - 0.01])
+                cube([in_x1 - in_x0, 2*in_y_max, 2*clearance + 0.02]);
         }
     }
 }

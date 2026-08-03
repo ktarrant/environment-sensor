@@ -126,10 +126,16 @@ So one screw does three jobs:
      +->into a post hanging off the lid     (tapped, 6 mm engagement)
 ```
 
-The lid posts drop into the board's corner holes as the lid closes, so the lid
-also **locates** the board. The heads end up on the outside of the floor, which
-is where a mount adapter gets captured later without adding fasteners - at the
-cost of ~2 mm more screw length per adapter.
+The board is trapped between the standoff below and the lid post above, and is
+**located by the screw shanks** through its 2.2 mm corner holes - not by the
+posts, which carry a 2.4 mm clearance bore and so cannot also spigot into a
+2.2 mm hole. Nothing else locates it: the cavity walls are deliberately loose
+(`enc_board_gap`, 0.4 a side) because a tight cavity would only make the board
+hard to drop in without holding it any better.
+
+The heads end up on the outside of the floor, which is where a mount adapter
+gets captured later without adding fasteners - at the cost of ~2 mm more screw
+length per adapter.
 
 Two consequences:
 
@@ -146,7 +152,7 @@ Two consequences:
 The board is 13 x 10 and ~2.5 thick, and it is not what sets the size. The
 **connector straddles the board** - mated plug 11.6 mm off the trace side,
 components and pin tails 3.4 on the other - and the plug's housing is 12.52 mm
-wide against a 10 mm board. The pod comes out **26.6 x 19.6 x 21.2** and every
+wide against a 10 mm board. The pod comes out **26.8 x 19.6 x 21.4** and every
 millimetre of that is the connector.
 
 `hardware/enclosure_sensor.scad`, two clamshell halves, built and manifold with
@@ -267,12 +273,26 @@ Two mechanisms, both cheap:
    **empty**. Anything visible is a collision, found in seconds instead of in
    PLA. This is the natural extension of the `assert()` discipline already in
    the models - asserts catch numbers, this catches geometry.
-2. **The fit gauge, printed first**, per the last section of
-   [measuring.md](measuring.md). Extend the existing idea to carry, at
-   -0.30/-0.15/0/+0.15/+0.30: the USB-C window, an M2 boss, a perfboard corner
-   seat, and the cable exit slot. Whatever offset actually fits becomes
-   `clearance` in `params.scad`, and every later part inherits a measured
-   number instead of a guessed one.
+2. **The fit gauge, printed first** - `hardware/fitgauge.scad`, an 86 x 46 x 3
+   plate, `make fitgauge`. It is the idea from the last section of
+   [measuring.md](measuring.md), built around the four numbers still guessed:
+
+   | row | what it settles |
+   | --- | --- |
+   | 5 posts, pilots 1.50-1.90 | `m2_pilot`. Every fastener in the build taps into printed plastic, and this varies by printer and material more than anything else here. Tested at the real 4.2 mm post diameter, where the plastic can actually split |
+   | 9 holes, 2.0-3.6 | `cable_od`. The smallest hole the cable passes through **is** its diameter - a measurement, not an estimate, and no caliper needed |
+   | 5 windows, -0.30 to +0.30 | the USB-C opening and its overmold relief, in a band milled down to the real 2.0 mm wall |
+   | 1 notch with pinch ribs | whether the cable actually snaps into the MCU box's exit and stays there |
+
+   Everything is labelled in hundredths of a millimetre, so "170" is a 1.70 mm
+   pilot and "-15" a window 0.15 under nominal. Print it in the material and
+   nozzle the enclosures will use - the numbers are only valid for the machine
+   that made them.
+
+   Note what is **not** on it: a board-seat pocket. `measuring.md` called for
+   one, but neither enclosure locates a board against a cavity wall, so the fit
+   it would measure does not exist any more. `enc_board_gap` is 0.4 a side and
+   the question is closed.
 
 ## Measurements still needed
 
@@ -302,7 +322,7 @@ design is sensitive to.
 | | |
 | --- | --- |
 | M0 | Take photos 1-3; add the enclosure block to `params.scad`, tagged. **Params done; photos outstanding** |
-| M1 | Print the fit gauge; replace `clearance = 0.20 [EST]` with a measured value |
+| M1 | Print the fit gauge (`hardware/fitgauge.scad`, **written**); feed back `m2_pilot`, `cable_od`, `usb_cut_margin` |
 | M2 | MCU box v1, plain, no mount. **Drafted - see below.** Fit the real board; iterate the cable exit |
 | M3 | Sensor pod, plain vented. **Drafted.** Fit the real sensor board |
 | M4 | Three mount adapters; print unit A and unit C |
@@ -319,12 +339,12 @@ printed yet - every number below is a model, not a measurement.
 
 | | |
 | --- | --- |
-| Exterior | **67.5 x 44.4 x 27.6 mm** |
-| Interior | 63.5 x 40.4 x 23.2 |
+| Exterior | **67.9 x 44.8 x 27.6 mm** |
+| Interior | 63.9 x 40.8 x 23.2 |
 | Board sits | 6.0 mm above the inner floor, 17.2 below the rim |
 | Fasteners | 4x **M2 x 16**, from below |
 | Lid post clearance to the ESP32 | 0.39 mm |
-| USB-C shell face | 0.45 mm inside the outer wall - hence the relief pocket |
+| USB-C shell face | 0.65 mm inside the outer wall - hence the relief pocket |
 
 ![exploded](../images/renders/enclosure_mcu_exploded.png)
 
@@ -374,11 +394,15 @@ None is a clearance violation, so no keepout could have found any of them. The
 check proves parts do not interpenetrate. It says nothing about whether they do
 their job.
 
-**One quirk worth knowing.** The pod's cavity is the board plus exactly
-`clearance`, so at the full value every cavity wall is coplanar with a keepout
-face and CGAL returns a zero-facet artifact rather than an empty set -
-indistinguishable at a glance from a real hit. The pod's check asks for ten
-microns less, which is the same question with a clean answer.
+**One quirk worth knowing.** When a cavity is the board plus *exactly*
+`clearance`, every cavity wall is coplanar with a keepout face and CGAL returns
+a zero-facet artifact rather than an empty set - which at a glance is
+indistinguishable from a real hit. Both enclosures hit this. The right fix
+turned out not to be a fudge factor in the check but `enc_board_gap`: the
+cavities are now 0.4 a side because **nothing in either enclosure is located by
+a cavity wall** - the MCU board by its screws, the sensor board by its
+connector - so a tight cavity was only ever going to make a board hard to drop
+in. The coplanarity went away as a side effect.
 
 ## Risks
 

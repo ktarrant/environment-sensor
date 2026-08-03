@@ -134,7 +134,12 @@ empty `make check`, neither printed:
 
 Every fastener in the project is an M2 x 16.
 
-**Next: the three mount adapters** (M4), then unit B's outer skin. Starting facts:
+**`hardware/fitgauge.scad` (`make fitgauge`) is the next thing to PRINT** - an
+86 x 46 x 3 plate that settles `m2_pilot`, `cable_od` and the USB-C window
+before an hour of filament goes into a box. Then the pod (~20 min) before the
+MCU box (~2 h). After that: the three mount adapters (M4), then unit B's skin.
+
+Starting facts:
 
 - MCU envelope: **17.56 mm** total (13.20 above the wiring face, 4.36 below).
   The **mated connector**, not the ESP32, sets the lid height.

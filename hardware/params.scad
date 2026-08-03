@@ -301,6 +301,14 @@ m2_engage = 6.00;  // thread engagement in the lid post
 // unless noted. The dimensions these choices have to RESPECT all live above.
 // ===========================================================================
 
+enc_board_gap = 0.40;   // [DESIGN] per side, between a board and the cavity
+                        //   around it. Deliberately looser than `clearance`:
+                        //   in BOTH enclosures the board is located by its
+                        //   fasteners or by the connector, never by the cavity
+                        //   walls, so this gap does no work and a tight print
+                        //   here is a board that will not drop in for nothing.
+                        //   Use `clearance` for fits that actually locate.
+
 enc_wall      = 2.00;   // [DESIGN] side walls
 enc_floor     = 2.40;   // [DESIGN] thicker than the walls: the screw heads are
                         //   counterbored into it, so it loses 1.4 mm locally.

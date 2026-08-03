@@ -15,10 +15,16 @@
 //          |  through the perfboard's own corner hole  (2.2 mm, clearance)
 //          +->into a post hanging off the lid  (tapped, 6 mm engagement)
 //
-// So the same four screws clamp the lid down, hold the board, and locate it -
-// the lid posts drop into the board's corner holes as they close. The heads end
-// up on the outside of the floor, which is also where a mount adapter will
-// later be captured, without adding fasteners.
+// So the same four screws clamp the lid down and trap the board between the
+// standoff below and the lid post above. The heads end up on the outside of the
+// floor, which is also where a mount adapter will later be captured, without
+// adding fasteners.
+//
+// The board is located by the SCREW SHANKS through its 2.2 mm corner holes, not
+// by the posts: a post carrying a 2.4 mm clearance bore cannot also spigot into
+// a 2.2 mm hole. So until the screws go in the board can shift by the hole
+// clearance, and the cavity walls are deliberately loose around it
+// (`enc_board_gap`) because they are not locating anything either.
 //
 // Consequences worth knowing before editing:
 //   - The lid post diameter is NOT free. At the -X/+Y corner the ESP32's own
@@ -53,8 +59,8 @@ $fn = $preview ? 24 : 48;
 
 // The ESP32 hangs past the perfboard's -X edge, so the interior is longer than
 // the board. Kept symmetric: the same slack at the +X end is useful cable room.
-in_half_x = pb_len/2 + asm_end_overhang() + clearance;
-in_half_y = pb_width/2 + clearance;
+in_half_x = pb_len/2 + asm_end_overhang() + enc_board_gap;
+in_half_y = pb_width/2 + enc_board_gap;
 
 in_z0 = -enc_standoff_h;                    // inner floor
 in_z1 = asm_conn_f() + enc_cable_head;      // rim = mated plug + cable turn

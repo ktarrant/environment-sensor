@@ -4,8 +4,8 @@ CAM_ISO := --camera=0,0,0,62,0,205,150 --imgsize=1400,1000
 CAM_TOP := --camera=0,0,0,0,0,0,105 --projection=o --imgsize=1400,900
 SCHEME  := --colorscheme=Tomorrow
 
-.PHONY: all esp32 perfboard connector sensor assembly enclosure check renders clean
-all: esp32 perfboard connector sensor assembly enclosure renders
+.PHONY: all esp32 perfboard connector sensor assembly enclosure fitgauge check renders clean
+all: esp32 perfboard connector sensor assembly enclosure fitgauge renders
 
 connector: build/connector.stl
 build/connector.stl: hardware/connector.scad hardware/params.scad
@@ -48,6 +48,17 @@ ENC_DEPS := hardware/params.scad hardware/enclosure_common.scad \
             hardware/connector.scad
 POD_DEPS := hardware/params.scad hardware/enclosure_common.scad \
             hardware/sensor.scad hardware/connector.scad
+
+# Print this BEFORE either enclosure - see the header of fitgauge.scad.
+fitgauge: build/fitgauge.stl
+build/fitgauge.stl: hardware/fitgauge.scad hardware/params.scad \
+                    hardware/enclosure_common.scad
+	@mkdir -p build
+	$(OPENSCAD) -o $@ $<
+images/renders/fitgauge.png: hardware/fitgauge.scad hardware/params.scad \
+                             hardware/enclosure_common.scad
+	@mkdir -p images/renders
+	$(OPENSCAD) -o $@ --camera=0,0,0,55,0,340,150 --imgsize=1400,900 $(SCHEME) $<
 enclosure: build/enclosure_mcu_base.stl build/enclosure_mcu_lid.stl \
            build/enclosure_pod_a.stl build/enclosure_pod_b.stl
 build/enclosure_mcu_base.stl: hardware/enclosure_mcu.scad $(ENC_DEPS)
@@ -106,7 +117,8 @@ renders: images/renders/esp32_iso.png images/renders/esp32_top.png \
          images/renders/enclosure_mcu_iso.png \
          images/renders/enclosure_mcu_exploded.png \
          images/renders/enclosure_pod_iso.png \
-         images/renders/enclosure_pod_exploded.png
+         images/renders/enclosure_pod_exploded.png \
+         images/renders/fitgauge.png
 images/renders/perfboard_top.png: hardware/perfboard.scad hardware/params.scad
 	@mkdir -p images/renders
 	$(OPENSCAD) -o $@ --camera=0,0,0,0,0,0,140 --projection=o --imgsize=1200,850 $(SCHEME) $<
