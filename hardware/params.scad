@@ -119,6 +119,66 @@ esp_misc_height = 3.50;  // [EST] keep-out height over the non-WROOM half.
                          //   little margin for parts not individually modeled.
                          //   Revisit if the lid ends up within ~1 mm of it.
 
+// ===========================================================================
+// PERFBOARD - 4 x 6 cm double-sided prototyping board
+//
+// This is what the enclosure actually mounts to. The ESP32 is soldered to this
+// board, so the ESP32's own mounting holes are NOT used - the perfboard's four
+// corner holes carry the assembly.
+//
+// Measured from images/perfboard_4x6_photo.jpg - a photo of the actual board,
+// at 8.71 px/mm. It carries silkscreen row/column labels, which settle the grid
+// counts outright, and "40*60MM" confirming the outline.
+//
+// The listing image (images/perfboard_4x6.png) was used first and got several
+// things wrong; where they disagree, the photo wins. Method check: measuring
+// the round thru-holes the same way returns 1.04 mm against a 1.0 mm nominal,
+// so these numbers are good to roughly +/-5%.
+// ===========================================================================
+
+pb_len   = 60.00;  // [EXACT] stated on the listing image, confirmed by aspect
+pb_width = 40.00;  // [EXACT]
+pb_thick =  1.60;  // [EXACT] standard FR-4
+
+pb_pitch = 2.54;   // [EXACT] silkscreen grid; measured 2.549
+pb_cols  = 14;     // [EXACT] silkscreen labels A..N. Span 13*2.54 = 33.02 mm
+pb_rows  = 20;     // [EXACT] silkscreen labels 1..20. Span 19*2.54 = 48.26 mm
+                   //   Both grids are centered on the board (measured margins
+                   //   3.70/3.12 and 5.80/5.17 vs 3.49 and 5.87 nominal).
+
+// The two 40 mm edges carry a row of elongated SMD pads. They are PADS, not
+// holes - solid tinned copper, nothing drilled through. They also sit on their
+// OWN pitch, not the 2.54 grid, which is why they looked half a pitch off when
+// measured against the columns in the lower-resolution listing image.
+pb_edge_pads       = 12;    // [PHOTO] counted three ways, all agree
+pb_edge_pad_pitch  = 2.70;  // [PHOTO] NOT 2.54; span 11*2.70 = 29.7 mm
+pb_edge_pad_inset  = 1.78;  // [PHOTO] pad row center, from the board edge
+pb_edge_pad_w      = 1.80;  // [PHOTO] short axis, across the row
+pb_edge_pad_l      = 2.90;  // [PHOTO] long axis, pointing at the board edge
+pb_edge_pad_h      = 0.10;  // copper + finish. Exaggerated slightly so the pads
+                            //   are visible in renders; real HASL is ~0.07.
+pb_edge_pad_x = pb_len/2 - pb_edge_pad_inset;   // [DERIVED] row center, +/- X
+
+pb_hole_dia = 1.00;  // [PHOTO] measured 1.04 across three holes; 1.0 nominal
+pb_pad_dia  = 1.80;  // [EST] annular ring around each thru-hole
+
+// Corner mounting holes. THESE ARE THE ENCLOSURE INTERFACE - the most important
+// numbers on this page. Unplated: bare drilled holes, no copper ring.
+pb_mount_dx = 28.17;  // [PHOTO] +/- along the 60 mm axis (pattern 56.34 mm)
+pb_mount_dy = 18.01;  // [PHOTO] +/- along the 40 mm axis (pattern 36.02 mm)
+                      //   i.e. ~1.83 and ~1.99 mm in from the respective edges.
+pb_mount_dia = 1.85;  // [PHOTO] four holes gave 1.56 / 1.79 / 1.93 / 1.93 by
+                      //   radial half-max, a method that returned 1.04 on the
+                      //   1.0 mm thru-holes. So ~2.0 mm nominal at most.
+                      //
+                      //   CONSEQUENCE: this is an M2 hole at best, and an M2
+                      //   screw (2.0 mm major dia) will be interference or will
+                      //   not pass at all. M3 is definitively out. Plan on M2
+                      //   with the holes opened up, or M1.6, or do not screw
+                      //   through them at all and capture the board edges
+                      //   instead. Worth settling with an actual screw.
+
+
 // --- Print and fit -----------------------------------------------------------
 
 clearance = 0.20;  // [EST] per-side slip fit. Replace with the value the
