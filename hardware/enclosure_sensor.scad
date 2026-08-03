@@ -59,12 +59,15 @@ $fn = $preview ? 24 : 48;
 
 // --- the cavity, derived from the board -------------------------------------
 
+// The pocket is sized to the mated PLUG, not to the header - the fit gauge put
+// the plug about 1 mm per side outside the header's outline, and the pocket is
+// what has to swallow it.
 in_x0     = -(bme_len/2 + enc_board_gap);    // board end
-in_x1     = bme_conn_x1() + pod_gap;         // past the connector
-pocket_x0 = bme_conn_x0() - pod_gap;
+in_x1     = max(bme_conn_x1(), bme_plug_x1()) + pod_gap;
+pocket_x0 = min(bme_conn_x0(), bme_plug_x0()) - pod_gap;
 
 in_y_board = bme_width/2   + enc_board_gap;  // sensor chamber
-in_y_conn  = xh_body_len/2 + pod_gap;        // connector, at the board
+in_y_conn  = xh_plug_len/2 + pod_gap;        // plug, at the board
 tilt       = xh_mated_h * tan(xh_solder_tilt);
 in_y_max   = in_y_conn + tilt;               // ...and at the plug's face
 

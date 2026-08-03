@@ -152,7 +152,7 @@ Two consequences:
 The board is 13 x 10 and ~2.5 thick, and it is not what sets the size. The
 **connector straddles the board** - mated plug 11.6 mm off the trace side,
 components and pin tails 3.4 on the other - and the plug's housing is 12.52 mm
-wide against a 10 mm board. The pod comes out **26.8 x 19.6 x 21.4** and every
+wide against a 10 mm board. The pod comes out **27.8 x 21.6 x 21.4** and every
 millimetre of that is the connector.
 
 `hardware/enclosure_sensor.scad`, two clamshell halves, built and manifold with
@@ -471,6 +471,51 @@ weakest direction. Two consequences:
 If the filleted posts still shear, the fallback is to move the thread out of the
 lid entirely and into a fat, floor-braced boss in the tub, which reverses the
 screw direction and puts the heads on the lid.
+
+## What the second gauge returned
+
+### The printer prints small holes undersize
+
+Both gauges picked **1.90** as the best pilot, in a filleted post and in solid
+material alike. At face value that is absurd - an M2's major diameter is 2.00,
+so a real 1.90 hole leaves 0.05 mm of thread. The consistent reading is that
+this printer takes roughly **0.2 mm off a small hole**, so a modelled 1.90 comes
+out near 1.70, which is exactly the textbook M2 pilot. It also explains the
+first gauge retrospectively: a modelled 1.80 came out near 1.60, which is a lot
+of interference, and the post duly split.
+
+`m2_pilot = 1.90` is therefore a **modelled** number carrying a printer
+compensation, and it is the only such number in `params.scad`. On a machine that
+holds hole size it goes back to ~1.70.
+
+`cable_od` is deliberately **not** corrected the same way, and the distinction is
+worth keeping straight:
+
+> A printed feature measured against another printed feature cancels the
+> printer's offset. A printed feature measured against a **real object** does
+> not. The screw is not printed, so the pilot needs compensating; the gland is
+> printed and is derived from a printed hole, so correcting `cable_od` would
+> double-count and make the gland too tight by exactly that amount.
+
+### The plug is a centimetre-class error, not a tenth
+
+The slot row was added on a hunch that `connector.scad`'s assumption - that the
+mated plug's footprint matches the header it pushes onto - had never been
+checked. It was wrong, and not marginally:
+
+| | modelled | measured |
+| --- | --- | --- |
+| plug outline | 12.52 x 5.75 (the header's) | **14.52 x 7.75** - passes that slot, not 13.52 x 6.75 |
+
+About **1 mm per side bigger** than assumed. `xh_plug_len` / `xh_plug_depth` are
+now real parameters, `xh_mated_keepout()` uses them instead of the header's
+outline, and the pod's pocket is derived from the plug rather than the header.
+
+The pod grows from 26.8 x 19.6 to **27.8 x 21.6 x 21.4**. Had this gone
+undetected, the pod would have printed, looked perfect, passed its collision
+check - which was built on the same wrong assumption - and then refused to close
+on the one part it exists to hold. The MCU box absorbed the change without
+complaint; it had the room.
 
 ## Risks
 

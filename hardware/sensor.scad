@@ -72,6 +72,12 @@ function bme_conn_x()  = bme_len/2 - bme_conn_inset;
 function bme_conn_x0() = bme_conn_x() - xh_body_back;    // toward the board
 function bme_conn_x1() = bme_conn_x() + xh_body_front;   // past the board edge
 
+// The MATED PLUG is about 1 mm per side bigger than the header, and it is the
+// plug the pocket has to swallow. Centred on the header's body, not its pins.
+function bme_plug_cx() = bme_conn_x() - (xh_body_back - xh_body_front)/2;
+function bme_plug_x0() = bme_plug_cx() - xh_plug_depth/2;
+function bme_plug_x1() = bme_plug_cx() + xh_plug_depth/2;
+
 // Tallest thing on the component face. The connector's pin tails win over the
 // BME280 can, which is worth knowing before sizing a chamber to the can.
 function bme_above() = max(bme_pcb_thick + bme_comp_h, xh_pin_below);

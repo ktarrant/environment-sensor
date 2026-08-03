@@ -134,19 +134,23 @@ empty `make check`, neither printed:
 
 Every fastener in the project is an M2 x 16.
 
-**`hardware/fitgauge.scad` has been printed once.** It settled `cable_od` (3.40,
-was 3.00) and `usb_cut_margin` (0.50, was 0.80), and it killed two things: the
-MCU box's pinch-rib strain relief, which did not hold the cable at all and is
-now a screw-pulled clamp on the lid; and its own M2-post row, which split the
-post at a 1.80 pilot and only accepted a screw at 1.90 - a value that is nearly
-a clearance hole and **must not be adopted**. `m2_pilot` is `[OPEN]`. Do not
-print for final assembly until it is settled. The broken post **sheared off at
-the plate with its hole intact** - a root failure under driver torque, not a
-thread failure - so every post and standoff now carries a root fillet
-(`enc_fillet`), and `make fitgauge` builds a second, small plate
-(`part="screws"`) that tests the same five pilots in a filleted post AND in
-solid material, one variable per row. Print that next. Detail in
-`docs/enclosure.md`.
+**`hardware/fitgauge.scad` has been printed twice and both enclosures are built
+on what it returned.** `cable_od` 3.40, `usb_cut_margin` 0.50. It killed the MCU
+box's pinch-rib strain relief (now a screw-pulled clamp on the lid) and it
+caught two things that would each have wasted a print:
+
+- **This printer takes ~0.2 mm off a small hole.** Both gauges chose a 1.90
+  pilot for M2, which is only sane if the hole comes out near 1.70. `m2_pilot`
+  is a *modelled* value carrying that compensation - the only printer-specific
+  number in `params.scad`. `cable_od` is NOT corrected the same way: a printed
+  feature measured against another printed feature cancels the offset, one
+  measured against a real object (the screw) does not.
+- **The mated plug is ~1 mm per side bigger than the header** it pushes onto,
+  which `connector.scad` had assumed they matched. `xh_plug_len/depth` are real
+  parameters now and the pod's pocket derives from them. Also: the fit gauge
+  posts sheared at their root, so every post and standoff carries `enc_fillet`.
+
+Detail in `docs/enclosure.md`.
 
 After that: the three mount adapters (M4), then unit B's skin.
 

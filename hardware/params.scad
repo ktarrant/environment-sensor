@@ -208,6 +208,19 @@ xh_drill      = 0.95;   // [MODEL] recommended PCB hole
 xh_body_front = 2.35;   // [MODEL] pin row to the shallow side
 xh_body_back  = 3.40;   // [MODEL] pin row to the latch side
 
+// The MATED PLUG'S OUTLINE. connector.scad used to assume this matched the
+// header's 12.52 x 5.75 - it does not, and that assumption was carrying the
+// whole sensor pod. Pushed through the fit gauge's slot row, the plug needs
+// 14.52 x 7.75 and will not pass 13.52 x 6.75, so it is roughly 1 mm per side
+// BIGGER than the header it pushes onto.
+//
+// Referenced to printed slots, like cable_od and for the same reason: the
+// pocket it feeds is also printed, so the offset cancels. Taking the slot that
+// passed as the plug's size over-states it slightly, which is the safe way to
+// be wrong about a pocket.
+xh_plug_len   = 14.52;  // [GAUGE] across the pin row
+xh_plug_depth =  7.75;  // [GAUGE] across the latch
+
 // Mated envelope - header PLUS the plug housing pushed onto it. This is what
 // actually sets the lid clearance, and it is the one number here that is NOT
 // from a datasheet.
@@ -290,20 +303,26 @@ layer     = 0.20;
 // it enters from OUTSIDE the tub floor, passes up the standoff, through the
 // board, and taps into a post hanging from the lid. See enclosure_mcu.scad.
 m2_free   = 2.40;  // [EST] clearance hole for an M2 shank
-m2_pilot  = 1.70;  // [OPEN] UNRESOLVED - the fit gauge did not settle this, it
-                   //   failed it. In a 4.20 mm free-standing post: 1.80 split
-                   //   the post while driving, and 1.90 accepted the screw only
-                   //   because it is very nearly a clearance hole - an M2's
-                   //   major diameter is 2.00, so 1.90 leaves 0.05 mm of radial
-                   //   thread. DO NOT ADOPT 1.90. It will strip on the first or
-                   //   second assembly.
+m2_pilot  = 1.90;  // [GAUGE] MODELLED diameter, not a physical one, and the one
+                   //   number in this file that is printer-specific.
                    //
-                   //   The gauge conflated two variables in one row - pilot
-                   //   diameter AND the strength of a thin column - so it can
-                   //   say "a 4.2 mm post will not take an M2 thread on this
-                   //   printer" but it cannot say what pilot to use in solid
-                   //   material. The pod's screws tap into 6 mm-thick SOLID
-                   //   end walls, which is not the case that failed.
+                   //   Both gauges landed on 1.90 as the best of 1.50-1.90, in
+                   //   a filleted post and in solid material alike. Taken at
+                   //   face value that is absurd: an M2's major diameter is
+                   //   2.00, so a real 1.90 hole leaves 0.05 mm of thread. The
+                   //   consistent reading is that THIS PRINTER PRINTS SMALL
+                   //   HOLES UNDERSIZE, by something like 0.2 mm - so a
+                   //   modelled 1.90 comes out near 1.70, which is exactly the
+                   //   textbook M2 pilot. It also explains the first gauge:
+                   //   a modelled 1.80 came out near 1.60, which is a lot of
+                   //   interference, and the post duly split.
+                   //
+                   //   Why this one number needs compensating and cable_od does
+                   //   not: the SCREW is not printed. Where a printed feature is
+                   //   measured against another printed feature the offset
+                   //   cancels, and where it is measured against a real object
+                   //   it does not. On a printer that holds hole size, this
+                   //   should go back to ~1.70. Reprint fitgauge.scad to check.
 m2_head_d = 3.80;  // [EST] pan head
 m2_engage = 6.00;  // thread engagement in the lid post
 enc_fillet = 1.20; // [DESIGN] flare where a post or standoff meets the plate it
@@ -356,6 +375,14 @@ cable_od       = 3.40;  // [GAUGE] the cable passes the 3.40 hole and not the
                         //   3.20, so 3.40 is the smallest bore it fits - which
                         //   is its diameter, read to the row's 0.20 step. Was
                         //   [EST] 3.00; the pigtail is fatter than assumed.
+                        //
+                        //   Deliberately NOT corrected for the hole-size offset
+                        //   discussed at m2_pilot. This is a printed hole
+                        //   measured against a real cable, and the gland it
+                        //   feeds is another printed hole - so the printer's
+                        //   offset applies to both and cancels. Correcting it
+                        //   here would double-count and make the gland too
+                        //   tight by exactly that amount.
 enc_exit_w     = 5.00;  // [DESIGN] cable notch width: cable_od plus room for
                         //   xh_solder_tilt to throw the plug sideways.
 

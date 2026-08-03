@@ -53,10 +53,16 @@ module xh_drills(h = 10) {
 
 // Clearance solid including the MATED plug. Use this against a lid, not
 // xh_header() - the plug is what actually collides.
+//
+// This used the HEADER's outline until the fit gauge showed the plug is about
+// 1 mm per side bigger. It is centred on the header's body, not on the pin row,
+// because the shroud is asymmetric about the pins.
+function xh_body_cx() = (xh_body_back - xh_body_front)/2;
+
 module xh_mated_keepout(gap = clearance) {
-    translate([0, (xh_body_back - xh_body_front)/2, xh_mated_h/2 - gap/2])
-        cube([xh_body_len + 2*gap,
-              xh_body_front + xh_body_back + 2*gap,
+    translate([0, xh_body_cx(), xh_mated_h/2 - gap/2])
+        cube([xh_plug_len + 2*gap,
+              xh_plug_depth + 2*gap,
               xh_mated_h + gap], center = true);
 }
 
@@ -67,5 +73,7 @@ assert(xh_drill > xh_pin_sq * 1.414,
        "drill smaller than the diagonal of the square post");
 assert(xh_mated_h > xh_body_h,
        "mated height must exceed the bare header height");
+assert(xh_plug_len >= xh_body_len && xh_plug_depth >= xh_body_front + xh_body_back,
+       "the plug cannot be smaller than the header it pushes over");
 
 xh_header();
