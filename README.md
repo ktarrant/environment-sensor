@@ -11,6 +11,7 @@ end. The circuit boards are built; the enclosures are in design.
 | [BOM.md](BOM.md) | The exact parts, with what is verified and what is not |
 | [docs/assembly.md](docs/assembly.md) | **The wiring**, and the MCU module as built |
 | [docs/measuring.md](docs/measuring.md) | How parts were dimensioned without a caliper |
+| [docs/enclosure.md](docs/enclosure.md) | **The enclosure plan** - three units, two shells each |
 | [hardware/](hardware/) | OpenSCAD models. `params.scad` holds every dimension |
 | [reference/](reference/) | Third-party models kept for cross-checking |
 | [images/](images/) | Photos the dimensions were measured from, and renders |
