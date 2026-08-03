@@ -420,8 +420,9 @@ enc_vents      = 9;     // [DESIGN] per long wall
 // ===========================================================================
 
 pod_wall   = 2.00;   // [DESIGN]
-pod_r      = 1.50;   // [DESIGN] outer edge radius. Small on purpose: printed on
-                     //   the parting face, this radius is a roof.
+pod_r      = 1.50;   // [DESIGN] outer edge radius. Applied to the edges running
+                     //   along Y, which is the build direction - so it is free.
+                     //   Rounding the other way would sit on the bed.
 pod_gap    = 0.50;   // [EST] around the connector and plug. Deliberately looser
                      //   than `clearance`: the PLUG's outline has never been
                      //   measured, and connector.scad just assumes it matches

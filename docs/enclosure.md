@@ -208,17 +208,39 @@ deepens; there is 1.26 mm left between them, and an assert that says so.
 - One **cross-flow slot** through both side walls, level with the can, so air
   crosses the chamber instead of sitting in it.
 
-The outer shell tapers - narrow over the sensor, full width over the plug. That
-is not styling: it is what gets the chamber's side walls down to 2 mm so the
-cross-flow slot is a slot and not a 5 mm tunnel.
+### Printing, and the taper that had to go
 
-### Printing
+Each half prints on its **outer face, opening up**. In that orientation every
+internal surface is either vertical or a floor with solid material beneath it -
+the chamber, the plug pocket and the lower chamber all open upward, the screw
+holes run straight up the build direction, and the cable gland is a groove in
+the top face. No supports, no bridges.
 
-Each half lies on its parting face, open side up. In that orientation **every
-internal feature is vertical - there is not one overhang in the part**. The only
-sloped surface is the outer taper, at 25 degrees off vertical. This is the
-single biggest advantage of the clamshell over a tub and lid, and it was not
-the reason for choosing it.
+Getting there cost the pod its taper. The shell used to be narrow over the
+sensor and full width over the plug, which thinned the chamber's side walls to
+2 mm. The slicer rejected it, and it was right twice over:
+
+- **A clamshell half is a bowl.** Printed rim-down - which is what "on its
+  parting face" meant, and it is self-contradictory with "opening up" - its own
+  outer wall roofs the cavity as an unsupported ceiling. It has to go outer face
+  down. That needs the outer face to be **flat**, and a tapered face is not.
+- The taper itself ran at **66 degrees off vertical** in that orientation. An
+  earlier note here claimed 25 degrees; that was the same arithmetic with rise
+  and run swapped.
+
+The corner rounding was reoriented for the same reason - the rounded edges now
+run along the build direction instead of putting a 1.5 mm fillet on the face
+that sits on the bed.
+
+The cost is real and worth stating: the chamber's side walls are **5.4 mm
+instead of 2.0**, so the cross-flow vent is a duct rather than a slot. The
+grille still sits 2 mm off the sensor and is 47% open, and it is the main path.
+If the pod lags room air on the bench, enlarge the cross-flow cut before
+touching anything else.
+
+The MCU box was checked against the same mistake and is fine: its tub prints
+open-side-up and its lid plate-down, both with the cavity opening away from the
+bed. The only bridge in the project is the top edge of the USB-C window.
 
 ### Still to come for the sunroom
 

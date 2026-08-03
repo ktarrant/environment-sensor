@@ -39,9 +39,16 @@
 // connectors are visibly askew and a pocket cut for a perpendicular plug is
 // the classic way to end up with a pod that will not close.
 //
-// Print: each half on its parting face, open side up. In that orientation
-// every internal feature is vertical - there is not one overhang in the part.
-// The only sloped surface is the outer taper, at 25 degrees off vertical.
+// PRINT: each half on its OUTER FACE, opening up. That is the whole reason the
+// pod is a straight box rather than the tapered one it started as - see
+// pod_shell(). In this orientation the build direction is Y, so every internal
+// face is either vertical or a floor with solid beneath it: the chamber, the
+// plug pocket and the lower chamber all open upward, the screw holes run
+// straight up, and the cable gland is a groove in the top face. No supports,
+// no bridges.
+//
+// Do NOT print it rim-down. A clamshell half is a bowl, and rim-down puts its
+// own outer wall over the cavity as an unsupported ceiling.
 //
 // Render:
 //   openscad -o build/pod_a.stl -D 'part="a"' hardware/enclosure_sensor.scad
@@ -82,8 +89,7 @@ screw_z  = (in_z1 + in_z0)/2;
 
 out_x0     = screw_x0 - pod_screw_wall;
 out_x1     = screw_x1 + pod_screw_wall;
-out_y      = in_y_max   + pod_wall;          // widest, at the plug
-out_y_nose = in_y_board + pod_wall;          // narrowest, over the sensor
+out_y      = in_y_max + pod_wall;            // set by the plug at full tilt
 out_z1     = in_z1 + pod_wall;
 out_z0     = in_z0 - pod_wall;
 
@@ -110,18 +116,32 @@ module ycyl(h, d) { rotate([-90, 0, 0]) cylinder(h = h, d = d); }
 
 // --- shell ------------------------------------------------------------------
 
-// Tapered: full width where the plug is, narrow over the sensor. The taper is
-// not styling - it is what gets the sensor chamber's side walls down to 2 mm
-// so the cross-flow slot is a slot and not a tunnel.
+// A straight box, and it has to stay one. This was tapered - narrow over the
+// sensor, full width over the plug - to thin the chamber's side walls. The
+// taper made the part unprintable and the slicer caught it:
+//
+//   A clamshell half is a bowl. Printed rim-down its cavity is roofed by its
+//   own outer wall, which is a ceiling over a void; so it must be printed
+//   OUTER FACE DOWN, opening up. That needs the outer face to be flat - and a
+//   tapered face is not. Worse, the taper itself ran at 66 degrees off vertical
+//   in that orientation. (An earlier comment here claimed 25 degrees. That was
+//   the same arithmetic with rise and run swapped.)
+//
+// The cost is real: the chamber's side walls are 5.4 mm instead of 2.0, so the
+// cross-flow vent is a duct rather than a slot. The grille sits 2 mm off the
+// sensor and does the work; see the note in pod_vents_cut().
+// The rounded edges run along Y, not along Z. Same reason: Y is the build
+// direction, so edges parallel to it are vertical and cost nothing, while
+// rounding the other way would have put a 1.5 mm fillet on the face that sits
+// on the bed - a small overhang, but an avoidable one.
 module pod_shell() {
     cx = (out_x0 + out_x1)/2;
     lx = out_x1 - out_x0;
-    hull() {
-        translate([cx, 0, out_z0])
-            rbox(lx, 2*out_y, (-pod_ledge_t) - out_z0, pod_r);
-        translate([cx, 0, out_z1 - 0.01])
-            rbox(lx, 2*out_y_nose, 0.01, pod_r);
-    }
+    cz = (out_z0 + out_z1)/2;
+    hz = out_z1 - out_z0;
+    hull() for (sx = [-1,1], sz = [-1,1])
+        translate([cx + sx*(lx/2 - pod_r), -out_y, cz + sz*(hz/2 - pod_r)])
+            rotate([-90, 0, 0]) cylinder(h = 2*out_y, r = pod_r);
 }
 
 module pod_cavity() {
@@ -137,9 +157,12 @@ module pod_cavity() {
     box3(in_x0, in_x1, in_y_max, in_z0, -pod_ledge_t);
 }
 
-// Grille straight over the sensor, plus one cross-flow slot through both side
-// walls. The grille is 2 mm from the BME280's can, which is the whole point of
-// putting the sensor in its own shell.
+// Grille straight over the sensor, plus one cross-flow cut through both side
+// walls. The grille is 2 mm from the BME280's can and is the main path - it is
+// 47% open directly over the sensor. The cross-flow cut gives convection
+// somewhere to go; with the taper gone it passes through 5.4 mm of wall, so it
+// is a duct rather than a slot. If bench testing shows the pod lagging room
+// air, enlarge this before touching anything else.
 module pod_vents_cut() {
     for (i = [0 : pod_vents-1])
         translate([-(pod_vents-1)*pod_vent_pitch/2 + i*pod_vent_pitch,
