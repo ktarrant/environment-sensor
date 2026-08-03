@@ -404,16 +404,75 @@ a cavity wall** - the MCU board by its screws, the sensor board by its
 connector - so a tight cavity was only ever going to make a board hard to drop
 in. The coplanarity went away as a side effect.
 
+## What the fit gauge returned
+
+First print. Three rows answered, one failed.
+
+| row | result | change |
+| --- | --- | --- |
+| cable holes | passes 3.40, not 3.20 | `cable_od` **3.00 -> 3.40**. The pigtail is fatter than assumed |
+| USB windows | the **smallest** (-0.30) takes the receptacle and the plug with margin | `usb_cut_margin` **0.80 -> 0.50**. `usb_overhang` and the overmold relief are vindicated - that was the flagged risk and it was fine |
+| exit notch | the cable slides through the pinch ribs **without being held** | ribs deleted; see below |
+| M2 posts | 1.80 split the post, 1.90 accepted the screw | **unresolved** - see below |
+
+### The strain relief did not work
+
+Two bumps the cable was meant to snap past held nothing. That is worse than
+having none: it looks like strain relief, and the load goes into the plug.
+
+The MCU box now uses the pod's approach - a **tongue on the lid** that descends
+into the notch and squeezes the cable against the notch floor as the four lid
+screws come up. Steel pulling plastic onto the cable, not a press fit. The
+interference is now `cable_grip = 0.80` in both enclosures, up from 0.40, since
+0.40 is precisely the value that was shown not to grip.
+
+### The post row failed rather than answering
+
+An M2's major diameter is 2.00, so a **1.90 pilot leaves 0.05 mm of radial
+thread**. It accepted the screw because it is very nearly a clearance hole, and
+it will strip on the first or second assembly. It must not be adopted.
+
+The real finding is that the row **conflated two variables**: pilot diameter and
+the strength of a thin free-standing column. It can say "a 4.2 mm post will not
+take an M2 thread on this printer"; it cannot say what pilot to use in solid
+material. That matters because the two threaded joints in this project are not
+alike:
+
+- the **pod's** screws tap into **6 mm-thick solid end walls** - no thin wall to
+  split, and not the case that failed;
+- the **MCU lid's** posts are exactly the case that failed, and the post
+  diameter is capped at 4.58 by the ESP32's PCB edge at one corner, so it cannot
+  simply be fattened.
+
+**The break settles it: the post sheared off at the plate, hole intact.** That
+is a cantilever failing at its root under driver torque - not the thread
+splitting the wall. So the pilot is probably not the problem; the gauge drew the
+worst possible version of the joint. A 4.20 column meeting a flat face at a
+sharp 90 degrees is a stress riser, and in FDM that junction is a joint in the
+weakest direction. Two consequences:
+
+- **`enc_fillet = 1.20`** - every post and standoff in both enclosures now
+  flares where it meets the plate it stands on. Free to print (the cone is
+  wider at the bottom, so it never overhangs) and it is the actual fix for the
+  failure that occurred. On the lid posts the flare is 6.6 across, well over
+  the 4.58 the tight corner allows, so an assert holds it high above the board.
+- **`make fitgauge` now also builds `fitgauge_screws.stl`** - `part="screws"`,
+  a 60 x 42 plate, ~10 min. Two rows at the same five pilots: filleted 4.20
+  posts (the MCU lid's joint) and the same pilots blind-drilled into a solid
+  8 mm block (the pod's end walls). One variable per row instead of one row
+  confounding both. Print that before anything else.
+
+If the filleted posts still shear, the fallback is to move the thread out of the
+lid entirely and into a fat, floor-braced boss in the tub, which reverses the
+screw direction and puts the heads on the lid.
+
 ## Risks
 
-- **`usb_overhang` (1.75, `[PHOTO]`)** - flagged in `params.scad` as the highest
-  risk number in the project. The fit gauge retires it.
 - **Cable bend radius is unmeasured** and sets the MCU box height. The side-exit
-  design falls back to the top exit if the cable turns out to be stiff.
-- **`cable_od` (3.00, `[EST]`)** is now the riskiest number in the project. The
-  pod's gland clamps the cable at `cable_od - 0.4`; if the real cable is much
-  fatter the halves will not close, and if it is much thinner there is no strain
-  relief. Measure it before printing a pod.
+  design falls back to the top exit if the cable turns out to be stiff. A 3.40
+  cable is stiffer than the 3.00 assumed.
+- **`m2_pilot` is `[OPEN]`** - see above. Nothing should be printed for final
+  assembly until it is settled.
 - **The pod's retention depends on `bme_conn_inset` (1.50, `[EST]`)**, which
   sets how far the connector overhangs the board and therefore how much flange
   the shoulder has to bear on. At 1.06 mm a side there is room to be wrong, but

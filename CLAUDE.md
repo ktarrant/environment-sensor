@@ -134,10 +134,21 @@ empty `make check`, neither printed:
 
 Every fastener in the project is an M2 x 16.
 
-**`hardware/fitgauge.scad` (`make fitgauge`) is the next thing to PRINT** - an
-86 x 46 x 3 plate that settles `m2_pilot`, `cable_od` and the USB-C window
-before an hour of filament goes into a box. Then the pod (~20 min) before the
-MCU box (~2 h). After that: the three mount adapters (M4), then unit B's skin.
+**`hardware/fitgauge.scad` has been printed once.** It settled `cable_od` (3.40,
+was 3.00) and `usb_cut_margin` (0.50, was 0.80), and it killed two things: the
+MCU box's pinch-rib strain relief, which did not hold the cable at all and is
+now a screw-pulled clamp on the lid; and its own M2-post row, which split the
+post at a 1.80 pilot and only accepted a screw at 1.90 - a value that is nearly
+a clearance hole and **must not be adopted**. `m2_pilot` is `[OPEN]`. Do not
+print for final assembly until it is settled. The broken post **sheared off at
+the plate with its hole intact** - a root failure under driver torque, not a
+thread failure - so every post and standoff now carries a root fillet
+(`enc_fillet`), and `make fitgauge` builds a second, small plate
+(`part="screws"`) that tests the same five pilots in a filleted post AND in
+solid material, one variable per row. Print that next. Detail in
+`docs/enclosure.md`.
+
+After that: the three mount adapters (M4), then unit B's skin.
 
 Starting facts:
 

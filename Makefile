@@ -50,11 +50,17 @@ POD_DEPS := hardware/params.scad hardware/enclosure_common.scad \
             hardware/sensor.scad hardware/connector.scad
 
 # Print this BEFORE either enclosure - see the header of fitgauge.scad.
-fitgauge: build/fitgauge.stl
+fitgauge: build/fitgauge.stl build/fitgauge_screws.stl
 build/fitgauge.stl: hardware/fitgauge.scad hardware/params.scad \
                     hardware/enclosure_common.scad
 	@mkdir -p build
-	$(OPENSCAD) -o $@ $<
+	$(OPENSCAD) -o $@ -D 'part="full"' $<
+# v2, after the first print failed the fastener row: posts and solid block at
+# the same five pilots, one variable each. ~10 min.
+build/fitgauge_screws.stl: hardware/fitgauge.scad hardware/params.scad \
+                           hardware/enclosure_common.scad
+	@mkdir -p build
+	$(OPENSCAD) -o $@ -D 'part="screws"' $<
 images/renders/fitgauge.png: hardware/fitgauge.scad hardware/params.scad \
                              hardware/enclosure_common.scad
 	@mkdir -p images/renders

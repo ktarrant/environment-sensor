@@ -10,6 +10,8 @@
 //   [MODEL]    from the DevKit V1 3MF, cross-checked against the photos.
 //   [PHOTO]    measured from images/, scaled against the 2.54 mm pin pitch.
 //   [DATASHEET] from the Espressif ESP32-WROOM-32 datasheet.
+//   [GAUGE]    read off the printed fit gauge, on THIS printer in THIS
+//              material. Reprint hardware/fitgauge.scad if either changes.
 //   [EST]      placeholder, not yet verified.
 //   [OPEN]     sources disagree; see the note. Not enclosure-critical yet.
 //
@@ -288,11 +290,26 @@ layer     = 0.20;
 // it enters from OUTSIDE the tub floor, passes up the standoff, through the
 // board, and taps into a post hanging from the lid. See enclosure_mcu.scad.
 m2_free   = 2.40;  // [EST] clearance hole for an M2 shank
-m2_pilot  = 1.70;  // [EST] self-tapping pilot in PLA/PETG. Print a test column
-                   //       before committing - printers vary more here than
-                   //       anywhere else in this file.
+m2_pilot  = 1.70;  // [OPEN] UNRESOLVED - the fit gauge did not settle this, it
+                   //   failed it. In a 4.20 mm free-standing post: 1.80 split
+                   //   the post while driving, and 1.90 accepted the screw only
+                   //   because it is very nearly a clearance hole - an M2's
+                   //   major diameter is 2.00, so 1.90 leaves 0.05 mm of radial
+                   //   thread. DO NOT ADOPT 1.90. It will strip on the first or
+                   //   second assembly.
+                   //
+                   //   The gauge conflated two variables in one row - pilot
+                   //   diameter AND the strength of a thin column - so it can
+                   //   say "a 4.2 mm post will not take an M2 thread on this
+                   //   printer" but it cannot say what pilot to use in solid
+                   //   material. The pod's screws tap into 6 mm-thick SOLID
+                   //   end walls, which is not the case that failed.
 m2_head_d = 3.80;  // [EST] pan head
 m2_engage = 6.00;  // thread engagement in the lid post
+enc_fillet = 1.20; // [DESIGN] flare where a post or standoff meets the plate it
+                   //   stands on. Added after the fit gauge's posts sheared off
+                   //   at exactly that junction, hole intact - a root failure,
+                   //   not a thread failure. Costs nothing to print.
 
 // ===========================================================================
 // ENCLOSURE - MCU box
@@ -335,11 +352,24 @@ enc_cable_head = 4.00;  // [EST] room above the MATED plug face for the cable to
                         //   standing in for a bend radius nobody has measured -
                         //   the cable finishes its bend outside the box, which
                         //   is what keeps this number as small as 4.
-cable_od       = 3.00;  // [EST] 4-conductor pigtail. Measure it.
+cable_od       = 3.40;  // [GAUGE] the cable passes the 3.40 hole and not the
+                        //   3.20, so 3.40 is the smallest bore it fits - which
+                        //   is its diameter, read to the row's 0.20 step. Was
+                        //   [EST] 3.00; the pigtail is fatter than assumed.
 enc_exit_w     = 5.00;  // [DESIGN] cable notch width: cable_od plus room for
                         //   xh_solder_tilt to throw the plug sideways.
 
-usb_cut_margin = 0.80;  // [DESIGN] per side, around the USB-C shell
+// Interference at a cable clamp. NOT 0.40: the gauge's one-sided pinch ribs at
+// that value let the cable slide straight through, which is the whole reason
+// the MCU box now closes on the cable with a clamp on the lid instead of
+// relying on two bumps in a wall.
+cable_grip     = 0.80;
+
+usb_cut_margin = 0.50;  // [GAUGE] per side, around the USB-C shell. The gauge's
+                        //   smallest window - this value - took the receptacle
+                        //   AND the plug with margin to spare, so the 0.80 it
+                        //   was drawn at is more than needed. Not tightened
+                        //   further: nothing is gained past "it fits".
 usb_plug_w     = 12.50; // [EST] the PLUG's overmold, not the receptacle. The
 usb_plug_h     =  7.50; // [EST]   shell face lands 0.45 mm inside the outer
 usb_relief_d   =  1.20; // [DESIGN] wall face, so without this relief pocket a
@@ -376,10 +406,11 @@ pod_screw_wall = 3.00; // [DESIGN] material each side of the screw in the end
                        //   as it deepens - at 2.60 the wall between them came
                        //   out under 0.9 mm. Asserted in enclosure_sensor.scad.
 pod_cable_room = 2.00; // [DESIGN] between the plug's face and the end wall
-pod_cable_grip = 0.40; // [EST] interference on the cable at the split gland.
-                       //   The halves clamp the cable directly - this is the
-                       //   strain relief, and the one place cable_od being
-                       //   wrong costs a reprint.
+                       // The pod's gland uses `cable_grip` above. It is a full
+                       // 360 degree clamp pulled up by two screws, so it starts
+                       // from a much better place than the pinch that failed -
+                       // but it is set to the same interference, because a
+                       // clamp that does not grip is not strain relief.
 pod_tap_depth  = 8.00; // [DESIGN] tapped depth in the far half
 
 pod_vents      = 5;     // [DESIGN] slots in the grille over the sensor

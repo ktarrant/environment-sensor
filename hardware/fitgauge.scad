@@ -11,9 +11,9 @@
 //      post, too loose strips it. This varies by printer and material more than
 //      anything else here, so it is tested at the real post diameter, not in
 //      a slab where the plastic cannot split.
-//   2. cable_od [EST 3.00]. The pod's gland clamps the cable directly at
-//      cable_od - 0.4. The hole row measures the real cable: the smallest one
-//      it passes through IS its diameter, no caliper needed.
+//   2. cable_od. The pod's gland clamps the cable directly. The hole row
+//      measures the real cable: the smallest one it passes through IS its
+//      diameter, no caliper needed.
 //   3. The USB-C window and its overmold relief. usb_overhang is flagged in
 //      params.scad as the highest-risk number in the project, and usb_plug_w/h
 //      are outright guesses. Five windows, at -0.30 to +0.30 on the opening.
@@ -39,11 +39,40 @@
 // Print flat, no supports, same material and nozzle as the enclosures - the
 // numbers it produces are only valid for the machine that made it.
 //
+// RESULTS, first print
+//   holes    passes 3.40, not 3.20  ->  cable_od = 3.40, was [EST] 3.00
+//   windows  the smallest one (-0.30) takes the receptacle AND the plug with
+//            margin  ->  usb_cut_margin = 0.50, was 0.80. usb_overhang and the
+//            overmold relief are vindicated; they were the flagged risk.
+//   notch    the cable slides through the pinch ribs without being held at all.
+//            The ribs are gone; the MCU box now clamps the cable with a tongue
+//            on the lid, pulled down by the four lid screws. A press fit into a
+//            one-sided pinch is not strain relief.
+//   posts    FAILED, and it failed the test rather than answering it. 1.80 split
+//            the post while driving; 1.90 accepted the screw only because it is
+//            nearly a clearance hole. See the note on m2_pilot in params.scad.
+//            This row conflated pilot diameter with the strength of a thin
+//            free-standing column, so it cannot separate "the pilot is wrong"
+//            from "a 4.2 mm post cannot take an M2". A v2 row should tap into
+//            solid material, which is what the pod's end walls actually are.
+//
 // Render:  openscad -o build/fitgauge.stl hardware/fitgauge.scad
 // ---------------------------------------------------------------------------
 
 include <params.scad>
 use <enclosure_common.scad>
+
+// part = "full"    the whole plate, as first printed
+//      = "screws"  ONLY the fastener test, reworked after the first print
+//                  failed it. Two rows at the same five pilots:
+//                    posts  4.20 columns WITH a root fillet - the MCU lid's
+//                           joint, and the fillet is the fix for the shear
+//                    bar    the same pilots blind-drilled into a solid block -
+//                           the pod's 6 mm end walls, where there is no column
+//                           to shear and no thin wall to split
+//                  Two rows, one variable each, instead of one row confounding
+//                  both. Prints in about ten minutes.
+part = "full";
 
 $fn = $preview ? 16 : 32;   // these are 2-4 mm holes; 32 is already past the
                             // point where the facets matter, and the label text
@@ -171,7 +200,46 @@ assert(pilots[0] < m2_pilot && pilots[len(pilots)-1] > m2_pilot,
        "the pilot row does not bracket the value params.scad currently uses");
 assert(post_h > m2_engage, "post shorter than the thread engagement it tests");
 
-fitgauge();
+// --- v2: the fastener test on its own ---------------------------------------
+
+s_l = 60; s_w = 42; s_t = 3.00;
+bar_y = -12; bar_w = 12; bar_h = 8;   // solid block: the pod's end wall
+
+module screwgauge() {
+    difference() {
+        union() {
+            rbox(s_l, s_w, s_t, g_r);
+            // filleted posts - the MCU lid's joint
+            for (i = [0 : len(pilots)-1])
+                translate([-(len(pilots)-1)*post_pitch/2 + i*post_pitch,
+                           9, s_t]) {
+                    cylinder(h = post_h, d = enc_post_od);
+                    root_fillet(enc_post_od, enc_fillet);
+                }
+            // solid bar - the pod's end wall
+            translate([-25, bar_y - bar_w/2, s_t])
+                cube([50, bar_w, bar_h]);
+            // one label row, between them, serving both columns
+            for (i = [0 : len(pilots)-1])
+                label(str(pilots[i]*100),
+                      -(len(pilots)-1)*post_pitch/2 + i*post_pitch, 1);
+        }
+        for (i = [0 : len(pilots)-1]) {
+            x = -(len(pilots)-1)*post_pitch/2 + i*post_pitch;
+            translate([x, 9, s_t + post_h - m2_engage])
+                cylinder(h = m2_engage + 0.1, d = pilots[i]);
+            translate([x, bar_y, s_t + bar_h - m2_engage])
+                cylinder(h = m2_engage + 0.1, d = pilots[i]);
+        }
+    }
+}
+
+assert(bar_h >= m2_engage, "solid bar shallower than the engagement it tests");
+assert(bar_y - bar_w/2 > -s_w/2, "solid bar runs off the plate");
+
+if      (part == "full")   fitgauge();
+else if (part == "screws") screwgauge();
+else assert(false, "part must be full | screws");
 
 echo(str("fit gauge ", g_l, " x ", g_w, " x ", g_t,
          " mm plate, posts stand ", post_h, " proud"));

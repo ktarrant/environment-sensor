@@ -49,6 +49,15 @@ module screw_column(h, od, bore, tap = 0, tap_len = 0) {
     }
 }
 
+// Conical flare at the root of a column, where it meets the plate it stands on.
+// A 4.2 mm post joined to a flat face at a sharp 90 degrees is both a stress
+// riser and, in FDM, a joint in the weakest direction - the fit gauge's posts
+// sheared off there under nothing worse than a screwdriver. Free to print: the
+// cone is wider at the bottom, so it never overhangs.
+module root_fillet(d, r) {
+    cylinder(h = r, d1 = d + 2*r, d2 = d);
+}
+
 // Through hole with a counterbore for the screw head, cut downward from z = 0.
 module screw_bore(depth, bore, head_d, head_h) {
     translate([0, 0, -depth - 0.1]) cylinder(h = depth + 0.2, d = bore);

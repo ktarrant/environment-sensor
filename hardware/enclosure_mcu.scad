@@ -118,13 +118,26 @@ module cable_exit_cut(z_top) {
     }
 }
 
-// Strain relief: two bumps that pinch the cable as it is pressed into the
-// notch. Cheap, and the alternative is the plug taking the strain.
-module cable_pinch_ribs() {
+// Strain relief. The first version was two bumps in the notch walls that the
+// cable was meant to snap past; the printed fit gauge showed the cable slides
+// through them without being held at all, which is worse than useless - it
+// looks like strain relief and leaves the plug taking the load.
+//
+// This is the pod's gland instead: a tongue on the LID that descends into the
+// notch and squeezes the cable against the notch's floor as the four lid screws
+// come up. Steel pulling plastic onto the cable, not a press fit.
+clamp_z = exit_z0 + cable_od - cable_grip;   // underside of the tongue
+
+module cable_clamp_tongue() {
     yc = asm_conn_center()[1];
-    for (s = [-1, 1])
-        translate([in_half_x + 0.8, yc + s*enc_exit_w/2, exit_z0])
-            cylinder(h = in_z1 - exit_z0, d = enc_exit_w - cable_od + 0.4);
+    x0 = in_half_x - 2.8;                    // clear of the mated plug
+    // Runs half a lid-thickness INTO the plate rather than stopping flush
+    // against it: a part that meets another only on a plane stays a separate
+    // solid in the STL.
+    translate([x0, yc - (enc_exit_w - 2*clearance)/2, clamp_z])
+        cube([out_half_x - x0,
+              enc_exit_w - 2*clearance,
+              in_z1 + enc_lid_t/2 - clamp_z]);
 }
 
 // The only places the box is ALLOWED to touch the board: a bearing ring at
@@ -147,35 +160,33 @@ module vents() {
 // --- the two parts ----------------------------------------------------------
 
 module mcu_tub() {
-    union() {
-        difference() {
-            union() {
-                difference() {
-                    translate([0, 0, floor_z])
-                        rbox(2*out_half_x, 2*out_half_y,
-                             in_z1 - floor_z, enc_r_out);
-                    translate([0, 0, in_z0])
-                        rbox(2*in_half_x, 2*in_half_y,
-                             in_z1 - in_z0 + 1, enc_r_in);
-                }
-                for (p = pb_mount_positions())
-                    translate([p[0], p[1], in_z0])
-                        screw_column(enc_standoff_h, enc_boss_od, m2_free);
+    difference() {
+        union() {
+            difference() {
+                translate([0, 0, floor_z])
+                    rbox(2*out_half_x, 2*out_half_y,
+                         in_z1 - floor_z, enc_r_out);
+                translate([0, 0, in_z0])
+                    rbox(2*in_half_x, 2*in_half_y,
+                         in_z1 - in_z0 + 1, enc_r_in);
             }
-            usb_cut();
-            cable_exit_cut(in_z1 + enc_lid_t + 1);   // open to the rim
-            vents();
             for (p = pb_mount_positions())
-                translate([p[0], p[1], in_z0])
-                    screw_bore(enc_floor, m2_free, m2_head_d + 0.40, 1.40);
+                translate([p[0], p[1], in_z0]) {
+                    screw_column(enc_standoff_h, enc_boss_od, m2_free);
+                    root_fillet(enc_boss_od, enc_fillet);
+                }
         }
-        // Added back AFTER the cut, on purpose: these live inside the notch,
-        // so inside the difference the notch would erase them.
-        cable_pinch_ribs();
+        usb_cut();
+        cable_exit_cut(in_z1 + enc_lid_t + 1);   // open to the rim
+        vents();
+        for (p = pb_mount_positions())
+            translate([p[0], p[1], in_z0])
+                screw_bore(enc_floor, m2_free, m2_head_d + 0.40, 1.40);
     }
 }
 
 module mcu_lid() {
+    union() {
     difference() {
         union() {
             translate([0, 0, in_z1])
@@ -190,10 +201,15 @@ module mcu_lid() {
                              2*(in_half_y - clearance - lip_t),
                              lip_h + 1, max(enc_r_in - lip_t, 0.1));
                 }
-            // posts: lid underside down to the board's top face
+            // Posts: lid underside down to the board's top face, flared where
+            // they meet the plate. That root is where the gauge's posts sheared,
+            // and these are 15.6 mm long against the gauge's 10.
             for (p = pb_mount_positions())
-                translate([p[0], p[1], pb_thick])
+                translate([p[0], p[1], pb_thick]) {
                     cylinder(h = in_z1 - pb_thick, d = enc_post_od);
+                    translate([0, 0, in_z1 - pb_thick])
+                        mirror([0, 0, 1]) root_fillet(enc_post_od, enc_fillet);
+                }
         }
         for (p = pb_mount_positions())
             translate([p[0], p[1], pb_thick - 0.1]) {
@@ -203,6 +219,9 @@ module mcu_lid() {
                              d = m2_free + 0.20);
             }
         cable_exit_cut(in_z1);                   // through the lip only
+    }
+    // After the cut: the tongue lives inside the notch the cut just made.
+    cable_clamp_tongue();
     }
 }
 
@@ -227,9 +246,20 @@ assert(pb_mount_dy - enc_post_od/2
        "lid post collides with the connector body");
 
 assert(in_z1 >= asm_top_f() + clearance,   "lid fouls the ESP32/WROOM stack");
+// The posts flare where they meet the lid. That flare is 6.6 across, well over
+// the 4.58 the tight corner allows, so it may only exist high above the board.
+assert(in_z1 - enc_fillet > asm_top_f() + clearance,
+       "post root fillet reaches down into the ESP32");
 assert(in_z1 >= asm_conn_f(),              "lid fouls the mated plug");
 assert(exit_z0 <= asm_conn_f(),
        "cable exit starts above the plug face - the cable cannot leave");
+assert(clamp_z < in_z1 - 0.8,
+       "no room left for the clamp tongue under the lid");
+assert(clamp_z > exit_z0,
+       "clamp tongue closes below the notch floor - it would pinch shut");
+// The tongue must not reach back over the mated plug, or the lid will not seat.
+assert(in_half_x - 2.8 > asm_conn_center()[0] + xh_body_back + clearance,
+       "clamp tongue overhangs the mated plug");
 assert(in_half_x >= pb_len/2 + asm_end_overhang(),
        "the ESP32's overhanging end does not fit inside the box");
 

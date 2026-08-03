@@ -85,7 +85,7 @@ out_z1     = in_z1 + pod_wall;
 out_z0     = in_z0 - pod_wall;
 
 cable_x  = (bme_conn_x0() + bme_conn_x1())/2;
-cable_d  = cable_od - pod_cable_grip;        // split gland: the halves clamp it
+cable_d  = cable_od - cable_grip;            // split gland: the halves clamp it
 grille_l = 2*in_y_board - 2.0;
 // Cross-flow slot, placed off the SENSOR rather than off the ceiling: it wants
 // to be level with the BME280's can, and hanging it off in_z1 walked it up into
