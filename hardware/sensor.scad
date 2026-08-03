@@ -64,12 +64,48 @@ module sensor_board() {
 
 // --- sensor end, with the connector fitted ----------------------------------
 
+// Where the connector sits, and how far it reaches. Exposed as functions so the
+// pod can be built from them: `use <sensor.scad>` imports functions but not
+// variables. Note the shroud is asymmetric about its pin row, and the 90 degree
+// rotation below puts the DEEP side (xh_body_back) toward -X.
+function bme_conn_x()  = bme_len/2 - bme_conn_inset;
+function bme_conn_x0() = bme_conn_x() - xh_body_back;    // toward the board
+function bme_conn_x1() = bme_conn_x() + xh_body_front;   // past the board edge
+
+// Tallest thing on the component face. The connector's pin tails win over the
+// BME280 can, which is worth knowing before sizing a chamber to the can.
+function bme_above() = max(bme_pcb_thick + bme_comp_h, xh_pin_below);
+
 // Connector hangs off the trace side (Z = 0), body pointing down, pins passing
 // up through the board to be soldered on the component face.
 module sensor_assembly() {
     sensor_board();
-    translate([bme_len/2 - bme_conn_inset, 0, 0])
+    translate([bme_conn_x(), 0, 0])
         rotate([180, 0, 0]) rotate([0, 0, 90]) xh_header();
+}
+
+// Clearance solid for the pod. Same role as mcu_keepout() at the other end.
+module sensor_keepout(gap = clearance) {
+    // the PCB
+    translate([0, 0, bme_pcb_thick/2])
+        cube([bme_len + 2*gap, bme_width + 2*gap, bme_pcb_thick + 2*gap],
+             center = true);
+    // everything on the component face as one slab. The real parts are inset
+    // 0.6 from the edges; a full-footprint slab is the conservative read.
+    translate([0, 0, bme_pcb_thick + (bme_comp_h + gap)/2])
+        cube([bme_len + 2*gap, bme_width + 2*gap, bme_comp_h + gap],
+             center = true);
+    // The connector's pin tails, soldered on the component face. Sized from the
+    // pin row itself plus a solder fillet - padding this out to a whole pitch
+    // makes it wider than the 10 mm board the pins are soldered to, which is
+    // impossible, and reports a collision against any pod built to the board.
+    translate([bme_conn_x(), 0, (xh_pin_below + gap)/2])
+        cube([xh_pin_sq + 1.0 + 2*gap,
+              xh_pin_span + xh_pin_sq + 1.0 + 2*gap,
+              xh_pin_below + gap], center = true);
+    // the mated plug, hanging off the trace face
+    translate([bme_conn_x(), 0, 0])
+        rotate([180, 0, 0]) rotate([0, 0, 90]) xh_mated_keepout(gap);
 }
 
 // --- guards -----------------------------------------------------------------

@@ -342,6 +342,42 @@ enc_vent_w     = 1.60;  // [DESIGN] 4 nozzle widths - bridges and prints clean
 enc_vent_pitch = 4.40;  // [DESIGN]
 enc_vents      = 9;     // [DESIGN] per long wall
 
+// ===========================================================================
+// ENCLOSURE - sensor pod
+//
+// A clamshell split down the plane of the cable, NOT a tub and lid. Two
+// reasons, and the second one is the real one:
+//   - the cable has a housing on BOTH ends, so it cannot be threaded through
+//     a closed hole; the exit has to be split between the two halves.
+//   - the board is held with no screw through it at all, so the pod does not
+//     depend on bme_mount_x/y, which are [EST] and mirror-ambiguous. Nothing
+//     here is blocked on that photo.
+// ===========================================================================
+
+pod_wall   = 2.00;   // [DESIGN]
+pod_r      = 1.50;   // [DESIGN] outer edge radius. Small on purpose: printed on
+                     //   the parting face, this radius is a roof.
+pod_gap    = 0.50;   // [EST] around the connector and plug. Deliberately looser
+                     //   than `clearance`: the PLUG's outline has never been
+                     //   measured, and connector.scad just assumes it matches
+                     //   the header's.
+pod_ledge_t   = 2.00;  // [DESIGN] shelf the board's trace face rests on
+pod_screw_wall = 3.00; // [DESIGN] material each side of the screw in the end
+                       //   walls, so the wall comes out 6.0 thick. Sized by the
+                       //   TAPERED plug pocket, which leans toward the +X screw
+                       //   as it deepens - at 2.60 the wall between them came
+                       //   out under 0.9 mm. Asserted in enclosure_sensor.scad.
+pod_cable_room = 2.00; // [DESIGN] between the plug's face and the end wall
+pod_cable_grip = 0.40; // [EST] interference on the cable at the split gland.
+                       //   The halves clamp the cable directly - this is the
+                       //   strain relief, and the one place cable_od being
+                       //   wrong costs a reprint.
+pod_tap_depth  = 8.00; // [DESIGN] tapped depth in the far half
+
+pod_vents      = 5;     // [DESIGN] slots in the grille over the sensor
+pod_vent_w     = 1.60;  // [DESIGN]
+pod_vent_pitch = 2.60;  // [DESIGN]
+
 // --- Guards ------------------------------------------------------------------
 
 assert(esp_pins_per_row == 15,

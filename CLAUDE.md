@@ -122,11 +122,19 @@ Do not re-derive these; they cost real effort.
 **Done:** ESP32, perfboard, connector and MCU assembly models, all building and
 manifold; BOM and measurement/assembly docs; photos in `images/`. Enclosure plan
 in `docs/enclosure.md` - **three complete units**, one per room, each two shells
-on a 10-20 cm pigtail. **MCU box drafted** (`hardware/enclosure_mcu.scad`, tub +
-lid, 67.5 x 44.4 x 27.6, 4x M2x16 from below), building manifold with an empty
-`make check`. Not printed.
+on a 10-20 cm pigtail. **Both enclosures drafted**, building manifold with an
+empty `make check`, neither printed:
 
-**Next: the sensor pod**, then the three mount adapters. Starting facts:
+- `enclosure_mcu.scad` - tub + lid, 67.5 x 44.4 x 27.6, 4x M2x16 **from below**;
+  one screw per corner holds the lid, the board, and locates the board.
+- `enclosure_sensor.scad` - two clamshell halves, 26.6 x 19.6 x 21.2, 2x M2x16.
+  Split on the cable axis because the pigtail has a housing on **both** ends and
+  cannot be threaded. The board is held by shoulders on the connector's flange,
+  not by a screw - so the pod does **not** depend on `bme_mount_x/y`.
+
+Every fastener in the project is an M2 x 16.
+
+**Next: the three mount adapters** (M4), then unit B's outer skin. Starting facts:
 
 - MCU envelope: **17.56 mm** total (13.20 above the wiring face, 4.36 below).
   The **mated connector**, not the ESP32, sets the lid height.

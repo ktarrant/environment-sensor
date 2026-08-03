@@ -143,26 +143,83 @@ Two consequences:
 
 ## Sensor pod
 
-Tiny: the board is 13 x 10 and ~2.5 thick. The **connector straddles the
-board** - mated plug 11.6 mm off the trace side, components and pin tails ~3.4
-on the other - so the envelope across the board is **15.0 mm**, and the pod's
-internal cavity lands near 15 x 12 x 18 mm before venting.
+The board is 13 x 10 and ~2.5 thick, and it is not what sets the size. The
+**connector straddles the board** - mated plug 11.6 mm off the trace side,
+components and pin tails 3.4 on the other - and the plug's housing is 12.52 mm
+wide against a 10 mm board. The pod comes out **26.6 x 19.6 x 21.2** and every
+millimetre of that is the connector.
 
-Design notes:
+`hardware/enclosure_sensor.scad`, two clamshell halves, built and manifold with
+an empty check. Not printed.
 
-- **One mounting hole**, so the pod needs a boss plus something to stop
-  rotation: a rib along one long edge, or capture the connector shroud itself.
-- **The mounting hole's position is `[EST]` and its Y sign is mirror-ambiguous**
-  - it was read off a bottom-side photo. Getting the mirror wrong puts the boss
-  ~4 mm out on a 10 mm-wide board. This must be resolved before any pod prints
-  (see Measurements below).
-- **Chimney venting**: inlet slots low, outlet slots high, on opposite faces,
-  with the BME280 can in the path. Cross-drafts are better than a single
-  screened window.
-- **Sunroom means direct sun.** Sun on a dark pod reads as a temperature spike
-  that has nothing to do with the room. Give unit B a double-wall shell - an
-  outer decorative skin with an air gap to the inner cavity - which is a
-  miniature Stevenson screen wearing a flower costume, and print it light.
+![pod](../images/renders/enclosure_pod_exploded.png)
+
+### Why a clamshell and not a tub and lid
+
+The interconnect has a housing on **both** ends - both boards carry male
+headers - so the cable cannot be threaded through a closed hole, and a hole big
+enough to pass a plug is most of the pod's end face. The exit therefore has to
+be split between the two halves, which puts the parting plane through the cable
+axis. That decision then pays for itself twice over: the halves close sideways
+onto the board, so nothing has to be inserted along Z, and the cable gland is
+just a half-round in each half that clamps the cable when the screws go in.
+
+### The board is held by the connector, not by a screw
+
+The board's single mounting hole is `[EST]` and its Y sign is
+**mirror-ambiguous** - read off a bottom-side photo, so a boss built on it
+could land 4 mm out on a 10 mm board. Nothing in this pod uses it, and nothing
+here is blocked on that photo.
+
+The connector does the work instead, because it is soldered to the board and
+its top face is flush with the board's underside at Z = 0:
+
+- **above Z = 0** the cavity is the *board's* outline only, so shell material
+  stands over the connector's flange - it overhangs the board by 1.26 mm each
+  side and 0.85 mm past the end - and stops the assembly lifting;
+- **below Z = 0** the cavity is the *connector's* outline only, so shell
+  material remains under the board out to x = 1.10 and holds it up.
+
+Two boxes, and the board is located in X, Y, Z and rotation with no fastener
+through it. It only works because the halves close laterally - a tub and lid
+would need insertion clearance in Z and would lose the shoulder. Three
+`assert()`s guard it; if any fails the board is loose and the render still
+looks perfect.
+
+### The plug pocket leans
+
+`xh_solder_tilt` is finally load-bearing rather than a note. The pocket tapers
+**2.03 mm** wider over the plug's depth, so a connector soldered up to 5 degrees
+off square still seats. A pocket cut for a perpendicular plug is the classic
+way to end up with a pod that will not close, and this one is deep enough
+(11.6 mm) for 5 degrees to matter. The taper leans toward the +X screw as it
+deepens; there is 1.26 mm left between them, and an assert that says so.
+
+### Venting
+
+- A **grille of 5 slots directly over the sensor**, 48% open, with 2 mm of wall
+  between it and the BME280's can.
+- One **cross-flow slot** through both side walls, level with the can, so air
+  crosses the chamber instead of sitting in it.
+
+The outer shell tapers - narrow over the sensor, full width over the plug. That
+is not styling: it is what gets the chamber's side walls down to 2 mm so the
+cross-flow slot is a slot and not a 5 mm tunnel.
+
+### Printing
+
+Each half lies on its parting face, open side up. In that orientation **every
+internal feature is vertical - there is not one overhang in the part**. The only
+sloped surface is the outer taper, at 25 degrees off vertical. This is the
+single biggest advantage of the clamshell over a tub and lid, and it was not
+the reason for choosing it.
+
+### Still to come for the sunroom
+
+Unit B wants a **double-wall shell** over this one - an outer decorative skin
+with an air gap - because sun on a pod reads as a temperature spike that has
+nothing to do with the room. That is a miniature Stevenson screen wearing a
+flower costume, it wraps the pod rather than replacing it, and it is M5.
 
 ## The three variants
 
@@ -219,22 +276,26 @@ Two mechanisms, both cheap:
 
 ## Measurements still needed
 
-In priority order. Items 1 and 2 block printing; 3 blocks unit B's shell only.
+In priority order. Item 1 blocks printing; 2 blocks unit B's shell only.
 
-1. **Sensor board, flat and straight down, component side up**, with the header
-   pins in frame for scale. Resolves the mounting hole position, the mirror
-   ambiguity, and the PCB thickness - all `[EST]` today. The photo method gets
-   ~0.1 mm from a flat shot and nothing useful from the hand-held ones we have.
-2. **The mated plug and its cable**: plug body width and depth, cable outer
-   diameter, and how tightly it will actually bend. This sets the cable exit
-   slot and the MCU box's interior height, and there is currently no number for
-   any of it.
-3. **The LEGO orchid**, photographed with a 2x4 brick (31.8 mm) in frame:
+1. **The mated plug and its cable**: plug body width and depth, cable outer
+   diameter, and how tightly it will actually bend. There is no measured number
+   for any of it, and it now sets three things - the MCU box's interior height,
+   its cable exit, and the pod's gland, which clamps the cable directly and is
+   the one feature that fails outright if `cable_od` is wrong.
+2. **The LEGO orchid**, photographed with a 2x4 brick (31.8 mm) in frame:
    pot dimensions, leaf scale, and where a pod could plausibly perch.
-4. **The cabinet side** - can it be drilled, or does unit A need adhesive
+3. **The cabinet side** - can it be drilled, or does unit A need adhesive
    mounting instead? Different back geometry either way.
-5. **M2 hardware on hand**: available screw lengths, and whether heat-set
-   inserts are worth buying.
+4. **M2 hardware on hand**: every fastener in the project is now an **M2 x 16**,
+   four in the MCU box and two in the pod. Confirm that length is available
+   before printing anything.
+
+**No longer blocking:** a flat photo of the sensor board was going to be needed
+before the pod could be designed, because the mounting hole is `[EST]` and
+mirror-ambiguous. The pod does not use that hole, so the photo is now only
+worth taking to firm up `bme_pcb_thick` and the outline - neither of which the
+design is sensitive to.
 
 ## Order of work
 
@@ -243,7 +304,7 @@ In priority order. Items 1 and 2 block printing; 3 blocks unit B's shell only.
 | M0 | Take photos 1-3; add the enclosure block to `params.scad`, tagged. **Params done; photos outstanding** |
 | M1 | Print the fit gauge; replace `clearance = 0.20 [EST]` with a measured value |
 | M2 | MCU box v1, plain, no mount. **Drafted - see below.** Fit the real board; iterate the cable exit |
-| M3 | Sensor pod, plain vented. Fit the real sensor board |
+| M3 | Sensor pod, plain vented. **Drafted.** Fit the real sensor board |
 | M4 | Three mount adapters; print unit A and unit C |
 | M5 | The bud/leaf shell for unit B, in PETG |
 | M6 | ESPHome config, then check all three against one reference thermometer in one room before they are dispersed |
@@ -251,7 +312,7 @@ In priority order. Items 1 and 2 block printing; 3 blocks unit B's shell only.
 M6 is not optional. Three sensors that disagree by a degree are three sensors
 you cannot trust; measure the offsets while they are still on the same table.
 
-## What the first draft actually came out at
+## The MCU box as drafted
 
 `hardware/enclosure_mcu.scad`, built and manifold, collision check empty. Not
 printed yet - every number below is a model, not a measurement.
@@ -272,24 +333,6 @@ is off the box's midline, because the connector sits on columns C..F rather
 than centered; and the box is much deeper above the board than below, because
 the mated plug is 13.2 mm tall while the ESP32 stack is only 8.84.
 
-### The collision check
-
-`make check` intersects the box with the hardware keepouts and must print
-`Current top level object is empty`. It caught nothing structural, but writing
-it forced one honest correction: the first version reported eight collisions,
-all of them the standoff tops and post bottoms - the surfaces that are supposed
-to touch the board. So the check now exempts a bearing ring at each corner
-hole, and nothing else in the box is allowed to touch the hardware.
-
-Two real defects it did *not* catch, both found by rendering the thing and
-looking at it, which is worth remembering as a limit of the method:
-
-1. The cable exit was cut to the same height in the lid as in the tub, so the
-   channel was open at the top and the cable would lift straight out. The lid
-   is cut only through its locating lip now; the plate roofs the hole.
-2. The strain-relief ribs were inside the `difference()`, so the notch erased
-   the very bumps meant to pinch the cable. They are unioned back on after.
-
 ### Still soft in this draft
 
 - `enc_standoff_h = 6.00` clears the 4.36 mm of header tails, but the
@@ -299,14 +342,58 @@ looking at it, which is worth remembering as a limit of the method:
 - `usb_plug_w/h` - the relief pocket is sized for a guess at the overmold.
 - All three belong on the fit gauge.
 
+## What `make check` is and is not good for
+
+It intersects each enclosure with the hardware keepouts and must print
+`Current top level object is empty`. Both do. It has now been run in anger on
+both ends, and the record is worth keeping honestly:
+
+**What it caught.** Nothing structural in the MCU box - but writing it forced a
+correction. The first run reported eight collisions, all of them standoff tops
+and post bottoms, i.e. the surfaces that are *supposed* to touch the board. A
+keepout that forbids the clamping scheme reports the design as broken by design,
+so both checks now exempt exactly the intended bearing surfaces and nothing
+else: a ring at each corner hole in the box, the Z = 0 plane in the pod.
+
+At the sensor end it caught a real error, though in the keepout rather than the
+pod: `sensor_keepout()` padded the connector's pin tails out by a whole pitch,
+making them 10.56 mm wide on a **10 mm board** - impossible, and it would have
+flagged any pod built correctly to the board. Sized from the pin row itself now.
+
+**What it missed.** Three real defects, all found by rendering the part and
+looking at it:
+
+1. The MCU cable exit was cut to the same height in the lid as in the tub, so
+   the channel was open at the top and the cable would lift straight out.
+2. The strain-relief ribs sat inside the `difference()`, so the notch erased the
+   very bumps meant to pinch the cable.
+3. The pod's cross-flow slot originally ran into the chamber ceiling, leaving a
+   zero-thickness sliver.
+
+None is a clearance violation, so no keepout could have found any of them. The
+check proves parts do not interpenetrate. It says nothing about whether they do
+their job.
+
+**One quirk worth knowing.** The pod's cavity is the board plus exactly
+`clearance`, so at the full value every cavity wall is coplanar with a keepout
+face and CGAL returns a zero-facet artifact rather than an empty set -
+indistinguishable at a glance from a real hit. The pod's check asks for ten
+microns less, which is the same question with a clean answer.
+
 ## Risks
 
 - **`usb_overhang` (1.75, `[PHOTO]`)** - flagged in `params.scad` as the highest
   risk number in the project. The fit gauge retires it.
 - **Cable bend radius is unmeasured** and sets the MCU box height. The side-exit
   design falls back to the top exit if the cable turns out to be stiff.
-- **The sensor mount hole's mirror ambiguity** - do not print a pod boss until
-  photo 1 exists.
+- **`cable_od` (3.00, `[EST]`)** is now the riskiest number in the project. The
+  pod's gland clamps the cable at `cable_od - 0.4`; if the real cable is much
+  fatter the halves will not close, and if it is much thinner there is no strain
+  relief. Measure it before printing a pod.
+- **The pod's retention depends on `bme_conn_inset` (1.50, `[EST]`)**, which
+  sets how far the connector overhangs the board and therefore how much flange
+  the shoulder has to bear on. At 1.06 mm a side there is room to be wrong, but
+  not much.
 - **Thermal validation is empirical.** The vent design is a reasoned guess. M6
   is what tells you whether the pod actually reads room air, and the fix if it
   does not is a longer pigtail, which is why the connector is there.

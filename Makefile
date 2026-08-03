@@ -46,17 +46,31 @@ images/renders/assembly_iso.png: hardware/assembly.scad $(DEPS)
 ENC_DEPS := hardware/params.scad hardware/enclosure_common.scad \
             hardware/assembly.scad hardware/perfboard.scad hardware/esp32.scad \
             hardware/connector.scad
-enclosure: build/enclosure_mcu_base.stl build/enclosure_mcu_lid.stl
+POD_DEPS := hardware/params.scad hardware/enclosure_common.scad \
+            hardware/sensor.scad hardware/connector.scad
+enclosure: build/enclosure_mcu_base.stl build/enclosure_mcu_lid.stl \
+           build/enclosure_pod_a.stl build/enclosure_pod_b.stl
 build/enclosure_mcu_base.stl: hardware/enclosure_mcu.scad $(ENC_DEPS)
 	@mkdir -p build
 	$(OPENSCAD) -o $@ -D 'part="base"' $<
 build/enclosure_mcu_lid.stl: hardware/enclosure_mcu.scad $(ENC_DEPS)
 	@mkdir -p build
 	$(OPENSCAD) -o $@ -D 'part="lid"' $<
-check: hardware/enclosure_mcu.scad $(ENC_DEPS)
+build/enclosure_pod_a.stl: hardware/enclosure_sensor.scad $(POD_DEPS)
 	@mkdir -p build
-	$(OPENSCAD) -o build/enclosure_mcu_check.stl -D 'part="check"' $< 2>&1 \
-	  | grep -E "top level object|WARNING"
+	$(OPENSCAD) -o $@ -D 'part="a"' $<
+build/enclosure_pod_b.stl: hardware/enclosure_sensor.scad $(POD_DEPS)
+	@mkdir -p build
+	$(OPENSCAD) -o $@ -D 'part="b"' $<
+check: hardware/enclosure_mcu.scad hardware/enclosure_sensor.scad \
+       $(ENC_DEPS) $(POD_DEPS)
+	@mkdir -p build
+	@echo "MCU box:"
+	@$(OPENSCAD) -o build/enclosure_mcu_check.stl -D 'part="check"' \
+	  hardware/enclosure_mcu.scad 2>&1 | grep -E "top level object|WARNING"
+	@echo "sensor pod:"
+	@$(OPENSCAD) -o build/enclosure_pod_check.stl -D 'part="check"' \
+	  hardware/enclosure_sensor.scad 2>&1 | grep -E "top level object|WARNING"
 images/renders/enclosure_mcu_iso.png: hardware/enclosure_mcu.scad $(ENC_DEPS)
 	@mkdir -p images/renders
 	$(OPENSCAD) -o $@ -D 'part="assembled"' -D 'show_grid=false' \
@@ -65,6 +79,14 @@ images/renders/enclosure_mcu_exploded.png: hardware/enclosure_mcu.scad $(ENC_DEP
 	@mkdir -p images/renders
 	$(OPENSCAD) -o $@ -D 'part="exploded"' -D 'show_grid=false' \
 	  --camera=0,0,8,66,0,205,215 --imgsize=1400,1100 $(SCHEME) $<
+images/renders/enclosure_pod_exploded.png: hardware/enclosure_sensor.scad $(POD_DEPS)
+	@mkdir -p images/renders
+	$(OPENSCAD) -o $@ -D 'part="exploded"' \
+	  --camera=0,0,-4,72,0,300,140 --imgsize=1300,1000 $(SCHEME) $<
+images/renders/enclosure_pod_iso.png: hardware/enclosure_sensor.scad $(POD_DEPS)
+	@mkdir -p images/renders
+	$(OPENSCAD) -o $@ -D 'part="assembled"' \
+	  --camera=0,0,-4,62,0,215,110 --imgsize=1300,1000 $(SCHEME) $<
 
 esp32: build/esp32.stl
 build/esp32.stl: hardware/esp32.scad hardware/params.scad
@@ -82,7 +104,9 @@ renders: images/renders/esp32_iso.png images/renders/esp32_top.png \
          images/renders/assembly_iso.png images/renders/sensor_assembly_iso.png \
          images/renders/sensor_assembly_top.png \
          images/renders/enclosure_mcu_iso.png \
-         images/renders/enclosure_mcu_exploded.png
+         images/renders/enclosure_mcu_exploded.png \
+         images/renders/enclosure_pod_iso.png \
+         images/renders/enclosure_pod_exploded.png
 images/renders/perfboard_top.png: hardware/perfboard.scad hardware/params.scad
 	@mkdir -p images/renders
 	$(OPENSCAD) -o $@ --camera=0,0,0,0,0,0,140 --projection=o --imgsize=1200,850 $(SCHEME) $<
