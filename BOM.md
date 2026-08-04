@@ -181,6 +181,50 @@ their board. Wherever the housing constrains the connector or its cable exit,
 allow a few degrees of slop (`xh_solder_tilt`) rather than assuming a
 perpendicular plug - otherwise a unit that works on the bench will not close.
 
+## Fasteners
+
+**Every fastener in this project is an M2 x 16.** That is not a coincidence -
+it fell out of both enclosures independently and was then kept deliberately, so
+there is one line to order and one driver to hold.
+
+| Where | Qty per unit | Size | Threads into |
+| --- | --- | --- | --- |
+| MCU box, corners | 4 | M2 x 16 | the lid post |
+| Sensor pod, ends | 2 | M2 x 16 | the far half's end wall |
+| | **6 per unit, 18 for three** | | |
+
+**No nuts, no washers, no heat-set inserts anywhere.** Every thread is formed
+directly in printed plastic, which is why `m2_pilot` is the number the fit gauge
+worked hardest to settle.
+
+### The screws in hand
+
+**M2 x 16 hex socket head cap, stainless, 0.4 mm pitch** (DIN 912 / ISO 4762 -
+head 3.8 mm across, 2.0 mm tall). 100 ordered, 18 needed.
+
+0.4 mm is the standard coarse pitch for M2 and matches the screws the fit gauge
+was calibrated with, which is the part that mattered: `m2_pilot = 1.90` is
+calibrated to a thread form on a particular printer and does not transfer to a
+coarser plastic-forming screw.
+
+**The counterbores were drawn for a 1.4 mm-tall head and these are 2.0.** The
+enclosures were changed rather than the screws: `m2_head_h` is 2.20 now, the MCU
+box's floor thickened from 2.40 to 3.40 to keep 1.20 mm of material bearing the
+head, and the pod's tapped depth went to 9.00 because the same screw now reaches
+0.8 mm further in. A proud head would have mattered on the MCU box, whose heads
+sit on the face the bookshelf unit stands on.
+
+Consequence: the MCU box is 1 mm taller, **67.9 x 44.8 x 28.6**. An M2 x 16
+needs 14.8 mm under the head and gets 7.2 mm of thread engagement.
+
+### Not counted above
+
+- **Mount adapters** (not yet designed). If an adapter is captured by the MCU
+  box's own four screws, those grow by its thickness - budget M2 x 20 for the
+  units that get one.
+- **Wall screws** for the utility-room cabinet mount: whatever suits the
+  cabinet, not an M2 anything.
+
 ## Enclosure implications
 
 - **Two enclosures**, MCU end and sensor end, joined by a 4-pin cable. Both

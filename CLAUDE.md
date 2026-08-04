@@ -127,7 +127,9 @@ empty `make check`, neither printed:
 
 - `enclosure_mcu.scad` - tub + lid, 67.5 x 44.4 x 27.6, 4x M2x16 **from below**;
   one screw per corner holds the lid, the board, and locates the board.
-- `enclosure_sensor.scad` - two clamshell halves, 27.8 x 21.6 x 21.4, 2x M2x16.
+- `enclosure_sensor.scad` - two clamshell halves, 27.8 x 21.6 x 23.4, 2x M2x16.
+  **Printed and fits** (third attempt) - closed by hand on the real board and
+  cable; screws still on order, so the tapped joint is unconfirmed.
   **Print each half OUTER FACE DOWN, opening up** - rim-down puts the half's own
   outer wall over its cavity as an unsupported ceiling, and that constraint is
   why the pod is a straight box rather than the tapered one it started as.

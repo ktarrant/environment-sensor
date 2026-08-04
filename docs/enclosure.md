@@ -539,6 +539,74 @@ check - which was built on the same wrong assumption - and then refused to close
 on the one part it exists to hold. The MCU box absorbed the change without
 complaint; it had the room.
 
+## What the first printed pod returned
+
+The cable exit was wrong, and wrong in a way none of the modelling caught
+because it was built on the wrong mental picture of the part.
+
+`cable_od = 3.40` came from pushing the interconnect through the gauge's hole
+row, and that is a fine measurement of a **bundle**. But at the sensor end there
+is no bundle: four wires leave the plug spread across the **7.62 mm pin row**,
+and the pod asked them to gather into a single 2.6 mm bore within
+`pod_cable_room = 2.00` mm. That is a 60 degree convergence, in the 2 mm nearest
+a connector, and no wire with any stiffness in it will do that neatly. The bore
+also printed slightly flattened, which turned "barely" into "no".
+
+Two changes:
+
+- **`pod_cable_room` 2.00 -> 4.00**, so there is length in which to gather.
+- The exit is a **slot, 7.00 x 3.00**, not a bore - and the 7.00 runs **along Y,
+  across the parting plane**, so each half's notch goes deeper rather than the
+  pair of them running longer along the seam.
+
+That axis took two goes to get right. The first attempt widened the slot **along
+the seam**, which is the one direction the wires were never going to use: the
+pin row runs along Y, the parting plane bisects it, and the wires fan out two to
+a half *perpendicular* to the seam. Widening along X gave them room they did not
+want and left the direction they did want at 2.6 mm.
+
+**The exit no longer clamps, and that is the trade.** Y is both the direction the
+wires occupy and the direction the halves close on, so an opening wide enough for
+them cannot also squeeze them. What keeps a pull off the solder joints is the
+plug, at 14.52 across, being far too big to follow the wires through a 7.00
+slot - so a hard tug unmates a latched connector rather than lifting a pad.
+
+The pod grows to **27.8 x 21.6 x 23.4**. An `assert()` now ties
+`pod_cable_room` to how far the wires actually have to travel, and another
+checks the plug cannot pass the slot.
+
+### Third pod: it fits
+
+Closed by hand on the real board and cable. Screws not yet in hand, so this is a
+fit result and not yet an assembly result - but a hand-close already retires the
+things that would have forced a params change:
+
+- the **plug pocket** takes the mated plug at the corrected 14.52 x 7.75;
+- the **parting faces meet** with the board and cable inside, which means
+  nothing in the cavity is proud;
+- the **cable exit** passes the four wires on the axis they actually run;
+- and by implication `bme_conn_inset` (1.50, `[EST]`) leaves enough connector
+  flange for the shoulder, since a wrong value there shows up as either a
+  rattling board or halves that will not close.
+
+Still waiting on screws: whether an M2 tapped into the end wall at a 1.90 pilot
+holds, and holds again after being backed out once. The second gauge's solid
+block says it should - that block is the same joint - but the pod's own is
+untested.
+
+### The same fact at the MCU end
+
+The wires fan across the pin row there too - the connector sits on columns
+C..F - and that notch was 5.00 wide against a 7.62 span. Widened to **8.00**,
+and the notch floor changed from a half-round to **flat with radiused corners**:
+at 8 mm wide a half-round floor curves up steeply at its edges, and it is the
+outermost two wires that would have been crushed between that curve and the
+clamp tongue.
+
+The MCU end gets to have it both ways, which the pod does not: the wires fan
+along Y and the lid's tongue clamps along Z, so widening one costs nothing in
+the other.
+
 ## Risks
 
 - **Cable bend radius is unmeasured** and sets the MCU box height. The side-exit

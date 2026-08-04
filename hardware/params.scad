@@ -323,7 +323,14 @@ m2_pilot  = 1.90;  // [GAUGE] MODELLED diameter, not a physical one, and the one
                    //   cancels, and where it is measured against a real object
                    //   it does not. On a printer that holds hole size, this
                    //   should go back to ~1.70. Reprint fitgauge.scad to check.
-m2_head_d = 3.80;  // [EST] pan head
+m2_head_d = 3.80;  // [EST] socket cap head, DIN 912 / ISO 4762
+m2_head_h = 2.20;  // [EST] 2.00 nominal plus a little. The build now uses
+                   //   SOCKET CAP screws, which are the tallest common M2 head
+                   //   - the counterbores were drawn 1.40 deep for a button
+                   //   head and would have left these standing 0.6 proud. On
+                   //   the MCU box those heads are on the bottom face, so proud
+                   //   heads make the bookshelf unit rock; enc_floor grew to
+                   //   suit rather than the screws being sent back.
 m2_engage = 6.00;  // thread engagement in the lid post
 enc_fillet = 1.20; // [DESIGN] flare where a post or standoff meets the plate it
                    //   stands on. Added after the fit gauge's posts sheared off
@@ -346,8 +353,9 @@ enc_board_gap = 0.40;   // [DESIGN] per side, between a board and the cavity
                         //   Use `clearance` for fits that actually locate.
 
 enc_wall      = 2.00;   // [DESIGN] side walls
-enc_floor     = 2.40;   // [DESIGN] thicker than the walls: the screw heads are
-                        //   counterbored into it, so it loses 1.4 mm locally.
+enc_floor     = 3.40;   // [DESIGN] thicker than the walls: the screw heads are
+                        //   counterbored into it, so it loses m2_head_h (2.20)
+                        //   locally and 1.20 is left to bear the head.
 enc_lid_t     = 2.00;   // [DESIGN]
 enc_r_out     = 3.00;   // [DESIGN] outer corner radius
 enc_r_in      = 0.80;   // [DESIGN] inner corner fillet. MUST stay small: only
@@ -383,8 +391,12 @@ cable_od       = 3.40;  // [GAUGE] the cable passes the 3.40 hole and not the
                         //   offset applies to both and cancels. Correcting it
                         //   here would double-count and make the gland too
                         //   tight by exactly that amount.
-enc_exit_w     = 5.00;  // [DESIGN] cable notch width: cable_od plus room for
-                        //   xh_solder_tilt to throw the plug sideways.
+enc_exit_w     = 8.00;  // [DESIGN] cable notch width, along Y. Sized for the
+                        //   four wires SPREAD ACROSS THE PIN ROW (7.62), not
+                        //   for a gathered bundle - same mistake the pod's exit
+                        //   made. The MCU end gets to have it both ways: the
+                        //   wires fan along Y and the lid's tongue clamps along
+                        //   Z, so widening one does not give up the other.
 
 // Interference at a cable clamp. NOT 0.40: the gauge's one-sided pinch ribs at
 // that value let the cable slide straight through, which is the whole reason
@@ -433,13 +445,38 @@ pod_screw_wall = 3.00; // [DESIGN] material each side of the screw in the end
                        //   TAPERED plug pocket, which leans toward the +X screw
                        //   as it deepens - at 2.60 the wall between them came
                        //   out under 0.9 mm. Asserted in enclosure_sensor.scad.
-pod_cable_room = 2.00; // [DESIGN] between the plug's face and the end wall
+pod_cable_room = 4.00; // [DESIGN] between the plug's face and the end wall.
+                       //   Was 2.00, and that was the real error behind the
+                       //   first pod's cable exit. The interconnect is not one
+                       //   round cable at this end - it is FOUR wires leaving
+                       //   the plug spread across the 7.62 mm pin row, and they
+                       //   were being asked to gather into a single 2.6 mm bore
+                       //   within 2 mm. That is a 60 degree convergence, which
+                       //   no wire with any stiffness in it will do neatly.
+// The exit is a SLOT, and its long axis is Y - ACROSS the parting plane, so
+// each half's notch runs deeper rather than the pair of them running longer
+// along the seam.
+//
+// This is the axis the four wires actually occupy. The pin row runs along Y,
+// the parting plane is y = 0 and bisects it, so the wires fan out two to a
+// half, perpendicular to the seam. A slot widened along the seam instead - as
+// this was, briefly - gives them room in the one direction they were never
+// going to use.
+//
+// The consequence is that the exit no longer clamps: Y is also the direction
+// the halves close on, so an opening wide enough for the wires cannot also
+// squeeze them. What stops a pull reaching the solder joints is the plug, at
+// 14.52 across, being far too big to follow the wires through a 7.00 slot.
+cable_slot_span = 7.00; // [DESIGN] along Y, with the wires
+cable_slot_x    = 3.00; // [DESIGN] across them
                        // The pod's gland uses `cable_grip` above. It is a full
                        // 360 degree clamp pulled up by two screws, so it starts
                        // from a much better place than the pinch that failed -
                        // but it is set to the same interference, because a
                        // clamp that does not grip is not strain relief.
-pod_tap_depth  = 8.00; // [DESIGN] tapped depth in the far half
+pod_tap_depth  = 9.00; // [DESIGN] tapped depth in the far half. Deeper than it
+                       //   was: a socket cap head sinks 2.20 instead of 1.40,
+                       //   so the same M2 x 16 reaches 0.8 mm further in.
 
 pod_vents      = 5;     // [DESIGN] slots in the grille over the sensor
 pod_vent_w     = 1.60;  // [DESIGN]

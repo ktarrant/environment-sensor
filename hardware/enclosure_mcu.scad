@@ -105,15 +105,21 @@ exit_z0 = asm_conn_f() - 0.60;      // just below the mated plug face
 // the locating lip and nothing more, so the plate itself roofs the notch and
 // closes it into a hole. Cutting the lid to the same height as the tub leaves
 // the channel open at the top and the cable simply lifts out.
+// The floor is FLAT with radiused corners, not a half-round. At 8 mm wide a
+// half-round floor curves up steeply at the edges, and since the wires arrive
+// spread across the pin row it is the outermost two that would be crushed
+// between that curve and the tongue. A flat floor and a flat tongue clamp a row
+// of wires evenly, which is what actually arrives here.
 module cable_exit_cut(z_top) {
-    r   = enc_exit_w/2;
+    r   = 1.0;
     yc  = asm_conn_center()[1];
     x0  = in_half_x - 4;
     len = (out_half_x + 1) - x0;
     hull() {
-        translate([x0, yc, exit_z0 + r])
-            rotate([0, 90, 0]) cylinder(h = len, r = r);
-        translate([x0, yc - r, z_top - 0.01])
+        for (s = [-1, 1])
+            translate([x0, yc + s*(enc_exit_w/2 - r), exit_z0 + r])
+                rotate([0, 90, 0]) cylinder(h = len, r = r);
+        translate([x0, yc - enc_exit_w/2, z_top - 0.01])
             cube([len, enc_exit_w, 0.01]);
     }
 }
@@ -181,7 +187,7 @@ module mcu_tub() {
         vents();
         for (p = pb_mount_positions())
             translate([p[0], p[1], in_z0])
-                screw_bore(enc_floor, m2_free, m2_head_d + 0.40, 1.40);
+                screw_bore(enc_floor, m2_free, m2_head_d + 0.40, m2_head_h);
     }
 }
 
@@ -257,6 +263,10 @@ assert(clamp_z < in_z1 - 0.8,
        "no room left for the clamp tongue under the lid");
 assert(clamp_z > exit_z0,
        "clamp tongue closes below the notch floor - it would pinch shut");
+// The wires arrive spread across the pin row; the notch has to take them that
+// way rather than asking them to gather in the 6 mm between plug and wall.
+assert(enc_exit_w >= xh_pin_span,
+       "cable notch narrower than the pin row the wires fan out from");
 // The tongue must not reach back over the mated plug, or the lid will not seat.
 assert(in_half_x - 2.8 > asm_conn_center()[0] + xh_body_back + clearance,
        "clamp tongue overhangs the mated plug");
@@ -304,9 +314,16 @@ echo(str("interior  ", 2*in_half_x, " x ", 2*in_half_y,
          " x ", in_z1 - in_z0, " mm"));
 echo(str("exterior  ", 2*out_half_x, " x ", 2*out_half_y,
          " x ", in_z1 + enc_lid_t - floor_z, " mm"));
-echo(str("screw     M2 x ", enc_floor + enc_standoff_h + pb_thick + m2_engage,
-         " (floor + standoff + board + engagement); add the mount adapter's",
-         " thickness later"));
+// Under-head length, so the counterbore counts as depth the screw does not have
+// to span. Quoting the full floor thickness here over-stated it by 2.2 mm.
+mcu_screw_need = (enc_floor - m2_head_h) + enc_standoff_h + pb_thick + m2_engage;
+assert(mcu_screw_need <= 16, "an M2 x 16 no longer reaches the lid post");
+assert(16 - ((enc_floor - m2_head_h) + enc_standoff_h + pb_thick)
+         <= m2_engage + (in_z1 - pb_thick - m2_engage),
+       "an M2 x 16 bottoms out in the lid post");
+echo(str("screw     M2 x 16 - needs ", mcu_screw_need,
+         " under the head (floor beneath the counterbore + standoff + board",
+         " + engagement); add the mount adapter's thickness later"));
 echo(str("lid post  ", enc_post_od, " dia, clearing the ESP32 edge by ",
          pb_mount_dy - enc_post_od/2
            - (abs(asm_esp_offset()[1]) + esp_width/2), " mm"));

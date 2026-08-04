@@ -94,7 +94,6 @@ out_z1     = in_z1 + pod_wall;
 out_z0     = in_z0 - pod_wall;
 
 cable_x  = (bme_conn_x0() + bme_conn_x1())/2;
-cable_d  = cable_od - cable_grip;            // split gland: the halves clamp it
 grille_l = 2*in_y_board - 2.0;
 // Cross-flow slot, placed off the SENSOR rather than off the ceiling: it wants
 // to be level with the BME280's can, and hanging it off in_z1 walked it up into
@@ -175,9 +174,18 @@ module pod_vents_cut() {
         pill(2*in_y_board, pod_vent_w, 40);
 }
 
+// A slot running along Y - across the parting plane, so each half's notch goes
+// deeper rather than the pair running longer along the seam. That is the axis
+// the four wires occupy: the pin row runs along Y and y = 0 bisects it, two
+// wires to a half.
+//
+// The first pod bored a single 2.6 mm hole and gave the wires 2 mm to gather
+// into it. The second widened the slot along the seam, which is the one
+// direction they were never going to use.
 module pod_cable_cut() {
-    translate([cable_x, 0, out_z0 - 0.1])
-        cylinder(h = (in_z0 + 0.01) - (out_z0 - 0.1), d = cable_d);
+    translate([cable_x, 0, out_z0 - 0.1]) rotate([0, 0, 90])
+        pill(cable_slot_span, cable_slot_x,
+             (in_z0 + 0.01) - (out_z0 - 0.1));
 }
 
 module pod_body() {
@@ -204,8 +212,8 @@ module pod_half(s) {
             translate([sx, 0, screw_z])
                 if (s > 0) {
                     translate([0, -0.1, 0]) ycyl(out_y + 0.2, m2_free);
-                    translate([0, out_y - 1.40, 0])
-                        ycyl(pod_wall + 1.5, m2_head_d + 0.40);
+                    translate([0, out_y - m2_head_h, 0])
+                        ycyl(m2_head_h + 1.5, m2_head_d + 0.40);
                 } else {
                     rotate([180, 0, 0]) translate([0, -0.1, 0])
                         ycyl(pod_tap_depth + 0.1, m2_pilot);
@@ -234,13 +242,23 @@ assert(in_y_max >= xh_body_len/2 + tilt,
 pod_screw_gap = screw_x1 - m2_free/2 - pocket_x1_at(screw_z - m2_free/2);
 assert(pod_screw_gap > 1.0,
        "leaning plug pocket breaks into the +X screw - raise pod_screw_wall");
-assert(cable_d < xh_body_len && cable_d < xh_body_front + xh_body_back,
+// The plug must not be able to follow the wires out - with no clamp at the
+// exit, this is the only thing keeping a pull off the solder joints.
+assert(cable_slot_span < xh_plug_len && cable_slot_x < xh_plug_depth,
        "cable exit is wide enough for the plug to pull through it");
-assert(cable_d > 0, "cable grip exceeds the cable diameter");
+// The wires leave the plug spread across the pin row. Whatever they still have
+// to converge, pod_cable_room is the length they get to do it in - the first
+// pod gave them 2 mm for 60 degrees.
+assert(pod_cable_room >= (xh_pin_span - cable_slot_span)/2 * 2.5,
+       "not enough length for the wires to gather into the exit slot");
+assert(cable_slot_span/2 + pod_wall < in_y_max + pod_wall,
+       "cable slot breaks out through the pod's side");
+assert(cable_x + cable_slot_x/2 < in_x1 && cable_x - cable_slot_x/2 > in_x0,
+       "cable slot runs outside the lower chamber");
 
 // The screw must reach past the parting plane and stop inside the far half.
 pod_screw_len = 16.00;                       // the same M2 x 16 as the MCU box
-pod_screw_in  = pod_screw_len - (out_y - 1.40);
+pod_screw_in  = pod_screw_len - (out_y - m2_head_h);
 assert(pod_screw_in > 4, "M2 x 16 barely crosses the parting plane");
 assert(pod_screw_in <= pod_tap_depth, "tapped hole is shallower than the screw");
 assert(pod_screw_in < out_y - 1.5, "screw tip breaks out of the far face");
@@ -294,5 +312,6 @@ echo(str("  plug pocket widens ", 2*tilt, " mm over its depth for ",
          " mm left between it and the +X screw"));
 echo(str("  fasteners 2x M2 x ", pod_screw_len, ", ", pod_screw_in,
          " mm into the far half"));
-echo(str("  cable exit ", cable_d, " mm across a ", cable_od,
-         " mm cable - the halves clamp it"));
+echo(str("  cable exit slot ", cable_slot_span, " (along the wires) x ",
+         cable_slot_x, " mm; they leave the plug spread over ", xh_pin_span,
+         " and have ", pod_cable_room, " mm to gather"));
