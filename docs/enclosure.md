@@ -589,10 +589,15 @@ things that would have forced a params change:
   flange for the shoulder, since a wrong value there shows up as either a
   rattling board or halves that will not close.
 
-Still waiting on screws: whether an M2 tapped into the end wall at a 1.90 pilot
-holds, and holds again after being backed out once. The second gauge's solid
-block says it should - that block is the same joint - but the pod's own is
-untested.
+**Screws in, and it holds. The sensor pod is validated.** Every `[EST]` it
+depended on has now survived contact with the real parts: the connector-flange
+retention, the plug pocket at the corrected outline, the wire-axis exit slot,
+and `m2_pilot = 1.90` in a real tapped joint rather than a gauge.
+
+One thing that result does **not** transfer: the pod taps into 6 mm of solid end
+wall. The MCU lid's posts are 4.20 mm columns - the same geometry that sheared
+on the first gauge. Same pilot, different joint, and `enc_fillet` is a fix that
+has still never been driven.
 
 ### The same fact at the MCU end
 

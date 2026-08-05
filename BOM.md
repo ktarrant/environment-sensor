@@ -200,7 +200,9 @@ worked hardest to settle.
 ### The screws in hand
 
 **M2 x 16 hex socket head cap, stainless, 0.4 mm pitch** (DIN 912 / ISO 4762 -
-head 3.8 mm across, 2.0 mm tall). 100 ordered, 18 needed.
+head 3.8 mm across, 2.0 mm tall). 100 ordered, 18 needed. **Proven** in the
+sensor pod: correct length, head sinks flush in the counterbore, and the thread
+holds in a 1.90 pilot tapped straight into printed plastic.
 
 0.4 mm is the standard coarse pitch for M2 and matches the screws the fit gauge
 was calibrated with, which is the part that mattered: `m2_pilot = 1.90` is

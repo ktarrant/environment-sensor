@@ -323,6 +323,13 @@ m2_pilot  = 1.90;  // [GAUGE] MODELLED diameter, not a physical one, and the one
                    //   cancels, and where it is measured against a real object
                    //   it does not. On a printer that holds hole size, this
                    //   should go back to ~1.70. Reprint fitgauge.scad to check.
+                   //
+                   //   CONFIRMED in a real joint: the sensor pod's two screws
+                   //   tap into 6 mm of SOLID end wall at this pilot and hold.
+                   //   That does NOT carry over to the MCU lid's posts, which
+                   //   are 4.20 mm columns - the geometry that sheared on the
+                   //   first gauge. Same pilot, different joint; enc_fillet is
+                   //   the fix and it is still untested.
 m2_head_d = 3.80;  // [EST] socket cap head, DIN 912 / ISO 4762
 m2_head_h = 2.20;  // [EST] 2.00 nominal plus a little. The build now uses
                    //   SOCKET CAP screws, which are the tallest common M2 head
